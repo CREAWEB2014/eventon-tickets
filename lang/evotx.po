@@ -1,0 +1,607 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: Event Tickets v1.6.3\n"
+"POT-Creation-Date: 2017-11-02 15:19-0800\n"
+"PO-Revision-Date: 2017-11-02 15:19-0800\n"
+"Last-Translator: Ashan Perera <ashanster@gmail.com>\n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Poedit 1.5.7\n"
+"X-Poedit-KeywordsList: _;gettext;gettext_noop;__;_e\n"
+"X-Poedit-Basepath: .\n"
+"X-Poedit-SearchPath-0: .\n"
+
+#: eventon-tickets.php:171
+msgid ""
+"Eventon Tickets need woocommerce plugin to function properly. Please install "
+"woocommerce"
+msgstr ""
+
+#: eventon-tickets.php:176
+#, php-format
+msgid ""
+"Tickets addon require Woocommerce version %s or above to fully function! "
+"Until a compatible Woocommerce version is installed tickets addon will be "
+"inactive."
+msgstr ""
+
+#: eventon-tickets.php:180
+#, php-format
+msgid "EventON %s is NOT active! - "
+msgstr ""
+
+#: includes/class-bothends.php:170
+msgid "Event Ticket Data"
+msgstr ""
+
+#: includes/class-bothends.php:288 includes/class-bothends.php:318
+msgid "Ticket Holder Details"
+msgstr ""
+
+#: includes/class-bothends.php:299
+msgid "Additional ticket holder names not specified!"
+msgstr ""
+
+#: includes/class-bothends.php:323
+msgid "Names:"
+msgstr ""
+
+#: includes/class-email.php:107 includes/admin/class-meta_boxes.php:26
+msgid "Event Ticket"
+msgstr ""
+
+#: includes/class-functions.php:275
+#, php-format
+msgid "Item #%s stock incremented from %s to %s."
+msgstr ""
+
+#: includes/class-functions.php:322
+#, php-format
+msgid "Item %1$s variation #%2$s stock reduced from %3$s to %4$s."
+msgstr ""
+
+#: includes/class-functions.php:324
+#, php-format
+msgid "Item %1$s stock reduced from %2$s to %3$s."
+msgstr ""
+
+#: includes/class-integration-actionuser.php:356
+#: includes/admin/class-admin-ajax.php:112
+msgid "Ordered Date"
+msgstr ""
+
+#: includes/class-integration-actionuser.php:357
+#: includes/admin/class-admin-ajax.php:113
+msgid "Order ID:"
+msgstr ""
+
+#: includes/class-integration-actionuser.php:372
+msgid "Event Time:"
+msgstr ""
+
+#: includes/class-integration-actionuser.php:372
+#: includes/admin/class-admin-ajax.php:127
+msgid "Total"
+msgstr ""
+
+#: includes/class-integration-actionuser.php:375
+#: includes/admin/class-admin-ajax.php:129
+msgid "Other incompleted orders"
+msgstr ""
+
+#: includes/class-integration-countdown.php:19
+msgid "Make Ticket Out of Stock"
+msgstr ""
+
+#: includes/admin/class-admin-ajax.php:46
+msgid "Attendee Details"
+msgstr ""
+
+#: includes/admin/class-admin-ajax.php:46
+msgid "Ticket Count"
+msgstr ""
+
+#: includes/admin/class-admin-ajax.php:127
+msgid "Event Start:"
+msgstr ""
+
+#: includes/admin/class-admin-ajax.php:138
+msgid "Could not find attendees with completed orders."
+msgstr ""
+
+#: includes/admin/class-admin-ajax.php:438
+msgid "Ticket Purchased By"
+msgstr ""
+
+#: includes/admin/class-admin-ajax.php:442
+msgid "Ticket Holder"
+msgstr ""
+
+#: includes/admin/class-admin-ajax.php:444
+#: includes/admin/class-meta_boxes.php:255
+msgid "Email Address"
+msgstr ""
+
+#: includes/admin/class-admin-ajax.php:445
+#: includes/admin/class-meta_boxes.php:258 includes/admin/evo-tix.php:109
+msgid "Event"
+msgstr ""
+
+#: includes/admin/class-admin-ajax.php:446
+msgid "Purchase Date"
+msgstr ""
+
+#: includes/admin/class-admin-ajax.php:447
+msgid "Ticket Status"
+msgstr ""
+
+#: includes/admin/class-admin-ajax.php:448
+msgid "Payment Status"
+msgstr ""
+
+#: includes/admin/class-admin-ajax.php:455
+msgid "Other Tickets in the same Order"
+msgstr ""
+
+#: includes/admin/class-admin-ajax.php:457
+msgid "Ticekt Number"
+msgstr ""
+
+#: includes/admin/class-admin-ajax.php:458
+msgid "Ticekt Status"
+msgstr ""
+
+#: includes/admin/class-admin.php:284
+msgid "Edit Event"
+msgstr ""
+
+#: includes/admin/class-admin.php:294
+msgid "Event Ticket Box"
+msgstr ""
+
+#: includes/admin/class-admin.php:307 includes/admin/evo-tix.php:62
+msgid "Tickets"
+msgstr ""
+
+#: includes/admin/class-meta_boxes.php:25
+msgid "Event Tickets"
+msgstr ""
+
+#: includes/admin/class-meta_boxes.php:39
+msgid "Event Ticket Confirmation"
+msgstr ""
+
+#: includes/admin/class-meta_boxes.php:45
+msgid ""
+"IMPORTANT: Ticket stock for each repeating instances is enabled, changes "
+"made to repeating instances may effect the stock for each repeat instance!"
+msgstr ""
+
+#: includes/admin/class-meta_boxes.php:58
+msgid "Is this a ticket order ?"
+msgstr ""
+
+#: includes/admin/class-meta_boxes.php:59
+msgid ""
+"Check this is the order contain event tickets. The order must NOT contain "
+"repeating events as repeating event tickets are not fully compatible for "
+"adding from backend, and they must be added from frontend only."
+msgstr ""
+
+#: includes/admin/class-meta_boxes.php:100
+msgid "Initial Ticket Email"
+msgstr ""
+
+#: includes/admin/class-meta_boxes.php:100
+msgid "Sent"
+msgstr ""
+
+#: includes/admin/class-meta_boxes.php:100
+msgid "Not Sent"
+msgstr ""
+
+#: includes/admin/class-meta_boxes.php:106
+#: includes/admin/class-meta_boxes.php:164
+msgid ""
+"You can re-send the Event Ticket confirmation email to customer if they have "
+"not received it. Make sure to check spam folder."
+msgstr ""
+
+#: includes/admin/class-meta_boxes.php:107
+#: includes/admin/class-meta_boxes.php:165
+msgid "Re-send Ticket(s) Email"
+msgstr ""
+
+#: includes/admin/class-meta_boxes.php:111
+msgid "Send Ticket(s) Email to custom Email"
+msgstr ""
+
+#: includes/admin/class-meta_boxes.php:112
+msgid "Type Email Address"
+msgstr ""
+
+#: includes/admin/class-meta_boxes.php:113
+msgid "Send Ticket(s) Email"
+msgstr ""
+
+#: includes/admin/class-meta_boxes.php:116
+#: includes/admin/class-meta_boxes.php:166
+msgid "Ticket Email Re-send!"
+msgstr ""
+
+#: includes/admin/class-meta_boxes.php:116
+#: includes/admin/class-meta_boxes.php:166
+msgid "Could not send email."
+msgstr ""
+
+#: includes/admin/class-meta_boxes.php:121
+msgid "Ticket(s) Order is Not Completed Yet!"
+msgstr ""
+
+#: includes/admin/class-meta_boxes.php:128
+msgid "Event Ticket Numbers for this Order"
+msgstr ""
+
+#: includes/admin/class-meta_boxes.php:225
+msgid "Woocommerce Order ID"
+msgstr ""
+
+#: includes/admin/class-meta_boxes.php:234 includes/admin/evo-tix.php:110
+msgid "Ticket Type"
+msgstr ""
+
+#: includes/admin/class-meta_boxes.php:239
+msgid "Ticket Holder(s) for the order"
+msgstr ""
+
+#: includes/admin/class-meta_boxes.php:241
+msgid " (Purchased By)"
+msgstr ""
+
+#: includes/admin/class-meta_boxes.php:256
+msgid "Quantity"
+msgstr ""
+
+#: includes/admin/class-meta_boxes.php:257
+msgid "Cost for ticket(s)"
+msgstr ""
+
+#: includes/admin/class-meta_boxes.php:267
+msgid "Ticket Time"
+msgstr ""
+
+#: includes/admin/class-meta_boxes.php:274
+msgid "Ticket Checked-in Status"
+msgstr ""
+
+#: includes/admin/class-meta_boxes.php:275
+msgid "Ticket(s)"
+msgstr ""
+
+#: includes/admin/class-meta_boxes.php:399
+msgid "Activate tickets for this Event"
+msgstr ""
+
+#: includes/admin/class-meta_boxes.php:412
+msgid "Ticket Info for this event"
+msgstr ""
+
+#: includes/admin/class-meta_boxes.php:416
+msgid ""
+"IMPORTANT: Event must have current or future event date for ticket "
+"purchasing information to display on front-end!"
+msgstr ""
+
+#: includes/admin/class-meta_boxes.php:437
+msgid "Event Ticket Order Data"
+msgstr ""
+
+#: includes/admin/class-meta_boxes.php:446
+msgid "Checked"
+msgstr ""
+
+#: includes/admin/class-meta_boxes.php:447
+msgid "Not-checked"
+msgstr ""
+
+#: includes/admin/class-meta_boxes.php:449
+msgid "Pending"
+msgstr ""
+
+#: includes/admin/class-meta_boxes.php:452
+msgid "In Stock"
+msgstr ""
+
+#: includes/admin/class-meta_boxes.php:461
+msgid "Ticket Pricing Type"
+msgstr ""
+
+#: includes/admin/class-meta_boxes.php:469
+#: includes/admin/class-meta_boxes.php:474
+#, php-format
+msgid "Ticket price (%s)"
+msgstr ""
+
+#: includes/admin/class-meta_boxes.php:470
+msgid "Edit Price Variations"
+msgstr ""
+
+#: includes/admin/class-meta_boxes.php:477
+#, php-format
+msgid "Sale price (%s)"
+msgstr ""
+
+#: includes/admin/class-meta_boxes.php:483
+msgid "Ticket SKU"
+msgstr ""
+
+#: includes/admin/class-meta_boxes.php:483
+msgid "(Required*)"
+msgstr ""
+
+#: includes/admin/class-meta_boxes.php:486
+msgid "Short Ticket Detail"
+msgstr ""
+
+#: includes/admin/class-meta_boxes.php:497
+msgid "Manage Ticket Stock"
+msgstr ""
+
+#: includes/admin/class-meta_boxes.php:507
+msgid "Total Tickets in Stock"
+msgstr ""
+
+#: includes/admin/class-meta_boxes.php:525
+msgid "Manage capacity seperate for each repeating event"
+msgstr ""
+
+#: includes/admin/class-meta_boxes.php:528
+msgid ""
+"NOTE: The capacity above should match the total number of capacity for each "
+"repeat occurance below for this event. Capacity is not supported for "
+"repeating events that have variations."
+msgstr ""
+
+#: includes/admin/class-meta_boxes.php:566
+msgid "Show remaining tickets"
+msgstr ""
+
+#: includes/admin/class-meta_boxes.php:569
+msgid "Show remaining count at"
+msgstr ""
+
+#: includes/admin/class-meta_boxes.php:582
+msgid "Show guest list for event on eventCard"
+msgstr ""
+
+#: includes/admin/class-meta_boxes.php:599
+msgid "Place ticket on out of stock"
+msgstr ""
+
+#: includes/admin/class-meta_boxes.php:623
+msgid "Sold Individually"
+msgstr ""
+
+#: includes/admin/class-meta_boxes.php:623
+msgid "Enable this to only allow one ticket per person"
+msgstr ""
+
+#: includes/admin/class-meta_boxes.php:639
+msgid "Show next available repeating instance of event"
+msgstr ""
+
+#: includes/admin/class-meta_boxes.php:639
+msgid ""
+"This will allow a visitor to see the next available event in the repeating "
+"events series, if current repeating event is past and not available for sale."
+msgstr ""
+
+#: includes/admin/class-meta_boxes.php:647
+msgid "Stop selling tickets X minutes before event start"
+msgstr ""
+
+#: includes/admin/class-meta_boxes.php:647
+msgid ""
+"This will hide selling tickets options X minutes before the event start. X "
+"can be in minuted in the input field."
+msgstr ""
+
+#: includes/admin/class-meta_boxes.php:652
+msgid "Ticket Section Subtitle"
+msgstr ""
+
+#: includes/admin/class-meta_boxes.php:657
+msgid "Ticket Field description"
+msgstr ""
+
+#: includes/admin/class-meta_boxes.php:672
+#: includes/admin/class-meta_boxes.php:673
+msgid "Remove Image"
+msgstr ""
+
+#: includes/admin/class-meta_boxes.php:672
+#: includes/admin/class-meta_boxes.php:673
+msgid "Choose Image"
+msgstr ""
+
+#: includes/admin/class-meta_boxes.php:679
+msgid "Ticket Image"
+msgstr ""
+
+#: includes/admin/class-meta_boxes.php:688
+msgid "Ticket Image Caption"
+msgstr ""
+
+#: includes/admin/class-meta_boxes.php:706
+msgid "Allow customers to submit inquiries."
+msgstr ""
+
+#: includes/admin/class-meta_boxes.php:709
+msgid "Override Default Email Address to receive Inquiries"
+msgstr ""
+
+#: includes/admin/class-meta_boxes.php:711
+msgid "Override Default Subject for Inquiries Email"
+msgstr ""
+
+#: includes/admin/class-meta_boxes.php:713
+msgid "NOTE: Front-end fields for Inquiries form can be customized from"
+msgstr ""
+
+#: includes/admin/class-meta_boxes.php:763
+msgid "Further Edit ticket product from woocommerce product page"
+msgstr ""
+
+#: includes/admin/class-meta_boxes.php:763
+msgid "Further Edit"
+msgstr ""
+
+#: includes/admin/class-meta_boxes.php:763
+msgid "Learn More"
+msgstr ""
+
+#: includes/admin/class-meta_boxes.php:763
+msgid "How to add variable price tickets"
+msgstr ""
+
+#: includes/admin/class-meta_boxes.php:776
+msgid "Select Repeating Instance of Event"
+msgstr ""
+
+#: includes/admin/class-meta_boxes.php:778
+msgid "All Repeating Instances"
+msgstr ""
+
+#: includes/admin/class-meta_boxes.php:788
+msgid "Submit"
+msgstr ""
+
+#: includes/admin/class-meta_boxes.php:803
+msgid "Select emailing option"
+msgstr ""
+
+#: includes/admin/class-meta_boxes.php:805
+msgid "Email Attendees List to someone"
+msgstr ""
+
+#: includes/admin/class-meta_boxes.php:806
+msgid "Email only to completed order guests"
+msgstr ""
+
+#: includes/admin/class-meta_boxes.php:807
+msgid "Email only to pending order guests"
+msgstr ""
+
+#: includes/admin/class-meta_boxes.php:814
+msgid "Select Event Repeat Instance"
+msgstr ""
+
+#: includes/admin/class-meta_boxes.php:816
+msgid "All"
+msgstr ""
+
+#: includes/admin/class-meta_boxes.php:828
+msgid "Email Addresses (separated by commas)"
+msgstr ""
+
+#: includes/admin/class-meta_boxes.php:829
+msgid "Subject for email"
+msgstr ""
+
+#: includes/admin/class-meta_boxes.php:830
+msgid "Message for the email"
+msgstr ""
+
+#: includes/admin/class-meta_boxes.php:832
+msgid "Send Email"
+msgstr ""
+
+#: includes/admin/class-meta_boxes.php:843
+msgid "View Attendee List"
+msgstr ""
+
+#: includes/admin/class-meta_boxes.php:851
+msgid "Email Attendee List"
+msgstr ""
+
+#: includes/admin/class-meta_boxes.php:866
+msgid "Additional Options for Event Attendance"
+msgstr ""
+
+#: includes/admin/class-meta_boxes.php:868
+msgid "View Attendees"
+msgstr ""
+
+#: includes/admin/class-meta_boxes.php:869
+msgid "Download (CSV)"
+msgstr ""
+
+#: includes/admin/class-meta_boxes.php:870
+msgid "Emailing"
+msgstr ""
+
+#: includes/admin/class-meta_boxes.php:871
+msgid "Troubleshoot RSVP Addon"
+msgstr ""
+
+#: includes/admin/class-meta_boxes.php:871
+msgid "Troubleshoot"
+msgstr ""
+
+#: includes/admin/class-settings.php:78
+msgid "Ticket WC Product Title"
+msgstr ""
+
+#: includes/admin/class-settings.php:94
+msgid ""
+"Event Manager (<a href=\"http://www.myeventon.com/addons/action-user/\" "
+"target=\"_blank\">ActionUser Addon</a> required)"
+msgstr ""
+
+#: includes/admin/class-settings.php:112
+msgid "Check out how your ticket sales are doing"
+msgstr ""
+
+#: includes/admin/class-settings.php:112
+msgid "Ticket Sales Report"
+msgstr ""
+
+#: includes/admin/class-settings.php:121
+msgid ""
+"This will stop auto sending ticket email to customers upon their purchase of "
+"tickets."
+msgstr ""
+
+#: includes/admin/class-settings.php:156
+msgid "Save Changes"
+msgstr ""
+
+#: includes/admin/evo-tix.php:79 includes/admin/evo-tix.php:81
+msgid "No"
+msgstr ""
+
+#: includes/admin/evo-tix.php:105
+msgid "Event Ticket(s)"
+msgstr ""
+
+#: includes/admin/evo-tix.php:106
+msgid "Status"
+msgstr ""
+
+#: includes/admin/evo-tix.php:108
+msgid "Date"
+msgstr ""
+
+#: includes/admin/evo-tix.php:189
+msgid "Order"
+msgstr ""
+
+#: includes/admin/evo-tix.php:191
+msgid "Ticket"
+msgstr ""
+
+#: templates/template-add-to-cart-variable.php:36
+msgid "Choose an option"
+msgstr ""

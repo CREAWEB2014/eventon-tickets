@@ -1,0 +1,273 @@
+/**
+ * EventON event ticket item post & eventon event post
+ * @version 1.3
+ */
+	.evo_dark_metabox_darker{margin: 15px -25px -15px;}
+	.evotx_tickets{	margin:0 -25px;	}
+	.evotx_tickets h4{
+		padding: 0 25px; margin: 0;
+		font-style: italic;
+		font-size: 18px;
+	}
+	
+	.evotx_tickets .actions{padding: 10px 25px}	
+	.evotx_tickets .actions a.attendees:before{content: "\f307";padding-right: 5px;}
+	.evotx_tickets .actions a.edit:before{content: "\f107";}
+	.evotx_tickets .actions a.download:before{content: "\f491";padding-right: 5px;}
+	.evotx_tickets table p.yesno_leg_line {padding: 3px 0 5px 0;}	
+	.evotx_lightbox .ajde_popup_text .evotx .evotx_ticketitem_customer{
+		border-bottom: 1px solid #E6E6E6;
+		margin: 0; display: block;
+		padding: 25px;
+		color:#444;
+	}
+	.evotx_lightbox .ajde_popup_text .evotx .evotx_ticketitem_customer.odd{background-color: #fbfbfb}
+	.eventedit_tix_attendee_list{ margin:0}
+	.eventedit_tix_attendee_list .event_time{
+		font-style: italic;
+		font-size: 14px;
+		padding: 8px 15px;
+		background-color: #FFE8CA;
+		display: block;
+	}
+	.eventedit_tix_attendee_list .event_time em{float: right;}
+	#ajde_popup_outter .evotx_lightbox .ajde_popup_text{padding: 0;}
+	.evotx_lightbox .ajde_popup_text .evotx p.attendee{padding: 0;}
+
+	.evotx_lightbox .ajde_popup_text .evotx p.attendee span.txcount, 
+	.evotx_lightbox .ajde_popup_text .evotx p.header span.txcount, .evotx_lightbox .ajde_popup_text .evotx p.attendee span.checkin{float: right;}
+	.evotx_lightbox .ajde_popup_text .evotx p.attendee span.txcount{
+		background-color: #e4d9cb;
+		border-radius:50%;
+		font-size:18px;
+		color:#fff;
+		height:40px; width: 40px;
+		text-align: center;	
+		box-sizing: border-box;
+		line-height: 40px;
+	}
+	.evotx_lightbox .ajde_popup_text .evotx p.attendee span.txcount em{
+		text-transform:uppercase;
+		font-size:14px;
+		margin-left:5px;
+		opacity:0.5;
+	}
+	.evotx_lightbox .ajde_popup_text .evotx p.attendee span.checkin.checked{background-color: #A3C56F;}
+	.evotx_lightbox .ajde_popup_text .evotx p.attendee span.checkin:hover{opacity: 0.6}	
+	.evotx_lightbox .ajde_popup_text .evotx p.attendee span.checkin{
+		background: #dfa872;
+		color: #fff;
+		font-size: 11px;
+		border-radius: 4px;
+		padding: 2px 5px;
+		text-transform: uppercase;
+		margin-top: 3px;
+		cursor: pointer;
+	}
+	.evotx_lightbox .ajde_popup_text .evotx p.attendee b{ text-transform: uppercase;}
+	.evotx_lightbox .ajde_popup_text .evotx p.attendee span.separatation{
+		display: block;
+		padding: 10px 25px;  border-bottom: 1px solid #E6E6E6;
+		background-color: #e6e6e6;
+		position: relative;
+		cursor: pointer;
+	}
+	.evotx_lightbox .ajde_popup_text .evotx p.attendee span.separatation:hover{background-color: #cecece}
+	.evotx_lightbox .ajde_popup_text .evotx p.attendee span.separatation:after{
+   		content: "\f140";
+	    display: inline-block;
+	    font: 400 20px/1 dashicons;
+	    speak: none; float: right;
+	    -webkit-font-smoothing: antialiased;
+	    -moz-osx-font-smoothing: grayscale;
+	    text-decoration: none!important;
+	}
+	.evotx_lightbox .ajde_popup_text .evotx p.attendee span.bad{display: none;}
+	.evotx_lightbox .ajde_popup_text .evotx p.attendee span.tixid .evotx_ticket .evotx_status{
+		background-color: #d4d4d4;
+		display: inline-block;
+		padding: 0 10px;
+		color: #525252;
+		cursor: pointer;
+		position:relative;
+		text-transform:uppercase;
+		margin-left:10px; 
+		font-style:normal;
+	}
+		.evotx_lightbox .ajde_popup_text .evotx p.attendee span.tixid .evotx_ticket .evotx_status:hover{
+			background-color: #3d3d3d;color:#fff;
+		}
+		.evotx_lightbox .ajde_popup_text .evotx p.attendee span.tixid .evotx_ticket .evotx_status.checked{
+			background-color: #85b74a; color: #fff;
+		}
+		.evotx_lightbox .ajde_popup_text .evotx p.attendee span.tixid .evotx_ticket .evotx_ticket_holdername{
+			padding: 10px;
+		}
+	.evotx_lightbox .ajde_popup_text .evotx p.attendee span.tixid .evotx_ticket{
+		color:#555;
+		background-color: #f7f7f7;
+		display: inline-block;
+	    margin: 5px 5px 5px 0;
+	    background-color: #f5f5f5;
+	    padding: 0 10px 1px 10px;
+	    position: relative;
+	    font-style: normal;
+	    font-size: 13px; line-height: 26px;height: 28px;
+	    border:1px solid #ccc;
+	    -webkit-box-shadow: 0 1px 0 #ccc;
+    	box-shadow: 0 1px 0 #ccc;
+    	-webkit-border-radius: 3px;
+    	border-radius: 3px;
+    	-webkit-box-sizing: border-box;
+	    -moz-box-sizing: border-box;
+	    box-sizing: border-box;
+	}
+		.evotx_lightbox .ajde_popup_text .evotx p.attendee span.tixid .clear{display:block; clear:both;}
+
+	.evotx_lightbox .ajde_popup_text .evotx p.attendee span.tixid{ padding: 8px 100px 0 0;
+		font-style: italic;opacity:0.6; display: block;}
+	.evotx_lightbox .ajde_popup_text .evotx p.attendee span.tixid em.orderdate{opacity: 0.5}
+	.evotx_lightbox .ajde_popup_text .evotx p.attendee span.tixid em a{
+		text-decoration: none;font-style: normal; background-color: #f1f1f1; color:#3d3d3d;
+	}
+	.evotx_lightbox .ajde_popup_text .evotx p.header.nada{border-bottom: none;}
+	.evotx_lightbox .ajde_popup_text .evotx p.header{
+		font-size: 16px; font-style: italic; padding: 10px 15px; background-color: #F9D29F;
+	}
+	.evotx_select_repeating_instance{padding-top: 15px;}
+	.ajde_popup_text .evotx_ticketitem_header{display: block; font-size: 14px;}
+	.ajde_popup_text .evotx_ticketitem_customer .evotx_ticketitem_header .orderStutus{
+		background-color: #f5ce88;
+		padding:3px 8px;
+		border-radius:5px;
+		font-size: 10px;
+		color:#fff;
+	}
+		.ajde_popup_text .evotx_ticketitem_customer .evotx_ticketitem_header .orderStutus.status_completed{
+			background-color: #5FC7BE;
+		}
+
+	.wp-list-table .column-tix{width:260px;}
+	.lite{opacity: 0.6}
+	.tixstatus, #evotx_ticketItem_tickets .tix_status{
+		background-color: #CECECE;
+		display: inline-block;
+		border-radius: 20px;
+		padding: 2px 12px 3px;
+		color: #fff;
+		font-size: 12px;
+		text-transform: uppercase;
+		font-style: normal;
+		line-height: 1.4
+	}
+	.checked .tixstatus{background-color: #A8C784;}
+	#evotx_ticketItem_tickets .tix_status.checked{background-color: #A8C784;color: #fff}
+	#evotx_ticketItem_tickets .tix_status:hover{background-color: #A0A0A0}
+	#evotx_ticketItem_tickets .tix_status{
+		margin-top: 5px;
+		cursor: pointer;
+		clear: both;	
+	}
+	#evotx_ticketItem_tickets td{padding: 10px 0;}
+	table#evotx_ticketItem_tickets span.evotx_attendee_name{font-style: normal; color:#f15422;}
+
+	/* attendee and other section */
+		.evoTX_metabox_attendee_other {
+			padding: 15px 25px; font: 13px 'open sans';
+			margin: 0 -25px -15px;
+			border-top: 3px solid #666565;background: #706f6f; color:#fff;
+		}
+
+	/* tickets custom post styles */
+		.evoTX_resend_conf.loading .evoTX_rc_in{opacity: 0.2}
+		.evoTX_resend_conf.loading{
+			background: url(evo-loader.gif) center center no-repeat;
+		}
+		.evoTX_resend_conf .message.error{background-color: #D58A78;}
+		.evoTX_resend_conf .message{
+			padding: 10px;
+		    /* border-radius: 5px; */
+		    background-color: #ABC27D;
+		    color: #fff;
+		    margin: 15px -12px -12px;
+		    font-size: 16px;
+		    text-transform: uppercase;
+		    font-weight: bold;
+		    font-size: 14px;
+		}
+
+	#evotx_view_attendees.loading{opacity: 0.6;}
+	#evotx_view_attendees.loading:before{
+		background: url(evo-loader.gif) center center no-repeat;
+		position: absolute;
+		height: 100%; width: 100%;
+		content:"";
+		top: 0; left: 0;z-index: 5;
+	}
+
+	/* woocommerce column on events cpt */
+		table.wp-list-table td.woo.column-woo span.yeswootix b{
+			position: relative;
+			display: block;
+			margin-top:10px;
+		  	width: 10px;
+		  	height: 10px;
+		}
+		table.wp-list-table td.woo.column-woo span.yeswootix b:before{
+			content: '';
+		  	display: block;
+		  	position: absolute;
+		  	top: 50%;
+		  	left: 50%;
+		  	margin: -9px 0 0 -9px;
+		  	height: 6px;
+		  	width: 12px;
+		  	border: solid #b385a9;
+		  	border-width: 0 0 4px 4px;
+		  	-webkit-transform: rotate(-45deg);
+		  	-moz-transform: rotate(-45deg);
+		  	-ms-transform: rotate(-45deg);
+		  	-o-transform: rotate(-45deg);
+		  	transform: rotate(-45deg);
+		}
+	.evotx_details.evomb_body table .innersection td:first-child{border-left:4px solid #F9CA8D;}
+	.evomb_body table .innersection tr:first-child td{border-top:3px solid #d6d6d6;}
+	.evotx_details.evomb_body table .innersection td{background-color:#e8e8e8; border-color:#d6d6d6;}
+
+
+/* ticket stats */
+	.evotx_stats_bar{
+		margin: 10px 0 -10px;
+	    border-top: 1px solid #e4e4e4;
+	    padding: 15px 25px 20px;
+	    background-color: #fff;
+	}
+	.evomb_body .evotx_stats_bar p.stat_bar {
+	    background-color: #9d9d9d;
+	    border-radius: 5px;
+	    height: 12px;
+	    padding: 0;
+	    overflow: hidden;
+	}
+	.evotx_stats_bar p.stat_bar span {
+	    display: inline-block;
+	    float: left;
+	    height: 100%;
+	}
+	.evotx_stats_bar p.stat_bar span.checked , .evotx_stat_text em.checked{background-color: #73AFF9;}
+	.evotx_stats_bar p.stat_bar span.notchecked , .evotx_stat_text em.notchecked{background-color: #5FC7BE;}
+	.evotx_stats_bar p.stat_bar span.pending , .evotx_stat_text em.pending{background-color: #FFE88E;}
+	.evotx_stats_bar p.stat_bar span.refunded , .evotx_stat_text em.refunded{background-color: #E69168;}
+	.evotx_stat_text em.instock{background-color: #9d9d9d;}
+	.evotx_stat_text{padding-top: 10px; font-size: 11px; text-transform: uppercase;color:#b1b1b1;}
+	.evotx_stat_text span{margin-right: 5px;}
+	.evotx_stat_text em{
+		display: inline-block;
+		height: 12px; width: 12px;
+		margin-right: 5px;
+		border-radius: 50%;
+	}
+	.evotx_stat_subtitle{padding-top: 8px;font-style: italic; font-size: 14px;}
+
+/* lightbox styling */
+	@media (max-width: 600px){}
