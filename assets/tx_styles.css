@@ -2,24 +2,30 @@
  * Event Ticket styles
  * @version 1.3.2
  */
-/* cart notification */
-	.evotx_ticket_purchase_section{margin-top: 20px;}	
+/* cart notification */	
 	.ajde_evcal_calendar .evotx_ticket_purchase_section .evotx_next_event{padding-top: 10px;}
 	
 /* added to cart notices */
 	.evcal_eventcard .evo_metarow_tix .tx_wc_notic{
-		margin: 15px -25px -25px; 
-		padding: 30px 0;
+		margin: 15px -50px -25px -55px; 
 		background-color: #93d48c;
 		text-align: center;
 		color:#fff;
 	}
 	
-	.evcal_eventcard .evo_metarow_tix .tx_wc_notic.error{background-color:#fb9287; margin-top: 20px; }
+	.evcal_eventcard .evo_metarow_tix .tx_wc_notic.error, 
+	.evo_metarow_tix .evotx_success_msg.bad{background-color:#fb9287; margin-top: 20px; }
 	body #evcal_list .evo_metarow_tix .tx_wc_notic .error, .evo_lightbox_content .tx_wc_notic .error{display: none;}
 	body #evcal_list .evo_metarow_tix .tx_wc_notic.error .error, 
 	.evo_lightbox_content .tx_wc_notic.error .error{display: block; font-size: 14px; margin: 0;}
 	.evo_metarow_tix .tx_wc_notic.error .evo-success{display: none;}
+	
+	body .evorow.evcalevdata.row .evotx_success_msg.bad,
+	#evcal_list .eventon_list_event .event_description p.evotx_success_msg.bad,
+	.evo_lightbox_content .evcal_evdata_row p.evotx_success_msg.bad
+	{padding-top: 50px;}
+	
+	.evo_metarow_tix .evotx_success_msg.bad:before{display: none;}
 	.evo_metarow_tix .evotx_success_msg:before{
 		content: "L";
 	    font-family: arial;
@@ -164,12 +170,8 @@
 	}
 
 	/* plus minus quantity */
-	.evoTX_wc_section .evotx_quantity span.evotx_label,
-	.evoTX_wc .tx_price_line span.evotx_label{
-		font-size: 18px;
-		font-style: italic;
-	}
-	.evoTX_wc_section .evotx_quantity .qty b{
+	.evoTX_wc_section .evotx_quantity .qty b, 
+	.evotx_qty_adjuster b{
 		border-radius: 50%;
 		height: 30px; width: 30px;
 		color:#fff;
@@ -182,21 +184,30 @@
 	    cursor: pointer;
 	    position: relative;
 	    top: 0;
+	    padding: 0;
 	}
-	.evoTX_wc_section .evotx_quantity .qty b.plu.reached{background-color:#dadada }
-	.evoTX_wc_section .evotx_quantity .qty b:hover{opacity: 0.8;}
-	.evoTX_wc_section .evotx_quantity .qty b.plu{background-color:#3091d4 ;top: 1px;line-height: 28px}
-	.evoTX_wc_section .evotx_quantity .qty em{
+	.evoTX_wc_section .evotx_quantity .qty b.plu.reached, .evotx_qty_adjuster b.plu.reached{background-color:#dadada }
+	.evoTX_wc_section .evotx_quantity .qty b:hover, .evotx_qty_adjuster b:hover{opacity: 0.8;}
+	.evoTX_wc_section .evotx_quantity .qty b.plu, .evotx_qty_adjuster b.plu{background-color:#3091d4 ;top: 1px;line-height: 28px}
+	.evoTX_wc_section .evotx_quantity .qty em, .evotx_qty_adjuster em{
 		font-style: normal;
 		font-size: 20px;
 		font-weight: bold;
 		padding: 5px 10px;
 	}
-	.evoTX_wc .evoTX_wc_section .evotx_quantity .qty{margin-left: 10px;}
-	.evoTX_wc.tximg .evoTX_wc_section .evotx_quantity .qty{display:block;margin-left: 0;margin-top: 10px;}
+	.evoTX_wc .evoTX_wc_section .evotx_quantity .qty, .evotx_qty_adjuster{
+		margin-left: 10px; float: right; margin-top: -5px;
+		display:flex;
+	}
+	.evoTX_wc.tximg .evoTX_wc_section .evotx_quantity .qty
+	{display:block;margin-left: 0;margin-top: 0px;}
+	.evoTX_wc.tximg .evoTX_wc_section .evotx_quantity:after{
+		content:""; display: block; clear:both;
+	}
+	.ajde_evcal_calendar .evoTX_wc_section .evotx_quantity{}
 
 	.ajde_evcal_calendar .evoTX_wc_section .evotx_quantity,
-	.evo_lightbox_content .evoTX_wc_section .evotx_quantity{padding: 10px 0;
+	.evo_lightbox_content .evoTX_wc_section .evotx_quantity{padding: 15px 0 20px;
 		-webkit-user-select: none; /* Chrome/Safari */        
 		-moz-user-select: none; /* Firefox */
 		-ms-user-select: none; /* IE10+ */
@@ -285,16 +296,63 @@
 		{background-position: 0 0px;}
 
 /* general */
+	.evotx_ticket_purchase_section{margin-right: 25px;}
+	.evotx_ticket_purchase_section .evotx_add_to_cart_bottom.outofstock{display: none;}
+	.evotx_ticket_purchase_section p.price.tx_price_line,
+	.evotx_ticket_purchase_section p.evotx_quantity,
+	p.evotx_item_price_line,
+	.evotx_ticket_purchase_section p.evotx_ticket_other_data_line
+	{
+		padding-bottom: 10px; padding-top: 10px;
+		border-bottom:1px solid #dadada;
+	}
 	.eventon_list_event .event_description p.evotx_remaining, 
 	.evo_lightbox_content .evo_metarow_tix p.evotx_remaining{
 		margin-top: 15px; color: #fff;
 	}
 	.eventon_list_event .evcal_eventcard .evoTX_wc .tx_price_line,
-	.evo_lightbox_content .evo_metarow_tix .tx_price_line {
-		font-size: 20px!important; font-style: normal;
+	.evo_lightbox_content .evo_metarow_tix .tx_price_line,
+	.evoTX_wc_section .evotx_quantity span.evotx_label,
+	.evoTX_wc .tx_price_line span.evotx_label,
+	.evotx_item_price_line span.evotx_label,
+	.evotx_ticket_purchase_section p.evotx_ticket_other_data_line span.label
+	{
+		font-size: 14px; font-style: normal;
 	}
 	.evoTX_wc .tx_price_line{margin-bottom: 5px;}
-	.evoTX_wc .tx_price_line span.value{font-weight: bold;}
+
+	body #evcal_list .eventon_list_event .evoTX_wc .evotx_addtocart_total{
+		padding-top: 15px;
+		font-size: 16px; font-style: normal; font-weight: bold;}
+
+	.evoTX_wc .evotx_addtocart_total span.value,
+	.evoTX_wc .tx_price_line span.value,
+	.evotx_item_price_line span.value,
+	.evotx_ticket_purchase_section p.evotx_ticket_other_data_line span.value
+	{float: right;}
+
+	.evoTX_wc .tx_price_line span.label,
+	.evotx_ticket_purchase_section p.evotx_addtocart_total .label,
+	.evotx_quantity .evotx_label
+	{
+		text-transform: uppercase;
+	}
+
+	/* remaining stock */
+		p.evotx_remaining{text-align: right;}
+		p.evotx_remaining span.evotx_remaining_stock{
+			font-style: normal;
+			font-size: 14px;
+			border-radius: 25px;
+			border: 1px solid #cccccc;
+			padding: 6px 20px;
+			background-color: transparent; color: #6a6a6a;
+			display: inline-block;
+		}
+		p.evotx_remaining span.evotx_remaining_stock span{font-weight: bold;}
+
+
+	.evotx_addtocart_button{text-align: right; padding-top: 15px;}
 	
 	.evoTX_wc .quantity input{
 		border: 2px solid #b7b7b7;
@@ -341,6 +399,7 @@
 		border-bottom: 1px solid #DCDBDB;
 		padding-bottom: 8px;
 		padding-top: 10px;
+		margin-right: 20px;
 	}
 	.evotx_guest_list .evo_h4 em{font-style: normal; opacity: 0.6}
 	.evotx_whos_coming span{
@@ -416,7 +475,13 @@
 	.eventon_list_event .evo_metarow_tix .evoTX_wc .evotx_price_line{font-size: 18px;margin-bottom: 5px;}
 	.eventon_list_event .evo_metarow_tix .evoTX_wc{padding-top: 10px;}
 	.eventon_list_event .evo_metarow_tix .evoTX_wc table.variations{font-size: 16px; margin-bottom: 0px;}	
-	.eventon_list_event .evoTX_wc table.variations td{vertical-align: top; background-color: transparent;}
+	.eventon_list_event .evoTX_wc table.variations td{
+		vertical-align: top; background-color: transparent;
+		border-bottom: 1px solid #dadada;
+		padding: 10px 0;
+	}
+	.eventon_list_event .evoTX_wc table.variations tbody tr:last-child td{border:none;}
+	.eventon_list_event .evoTX_wc table.variations td.value{text-align: right;}
 	
 	.eventon_list_event .evo_metarow_tix .evoTX_wc .evotx_orderonline_add_cart .single_variation{
 		font-size: 20px; font-style: italic;
@@ -428,9 +493,7 @@
 		font-size: 30px; color:#808080;
 	}
 	.eventon_list_event .evotx_orderonline_add_cart .single_variation p.stock, 
-	.evo_lightbox_content .evotx_orderonline_add_cart .single_variation p.stock,
-	#evcal_list .eventon_list_event .event_description p.evotx_remaining,
-	.evo_lightbox_content .evo_metarow_tix p.evotx_remaining{
+	.evo_lightbox_content .evotx_orderonline_add_cart .single_variation p.stock{
 		border-radius: 5px;
 		padding: 6px 10px;
 		background-color: #8fd687; color: #fff;
@@ -439,8 +502,32 @@
 	.eventon_list_event .evotx_orderonline_add_cart .single_variation p.stock.out-of-stock,
 	.evo_lightbox_content .evotx_orderonline_add_cart .single_variation p.stock.out-of-stock{background-color:#f58358 }
 
-/* checkout page */
+/* order details after checkout */
+	.woocommerce-order-details .evo_event_ticket_item .wc-item-meta li{
+		border-bottom:1px solid #e6e6e6;
+		display:flex; 
+		padding: 5px 0;
+		font-size: 12px; font-style: italic;
+	}
+	.woocommerce-order-details .evo_event_ticket_item .wc-item-meta li strong{flex-basis:30%;}
+	.woocommerce-order-details .evo_event_ticket_item .wc-item-meta li:before, .woocommerce-order-details .evo_event_ticket_item .wc-item-meta li:after{content:none;}
+/* cart & checkout page */
+	/* display ticket item meta */
+	.shop_table .cart_item.evo_event_ticket_item .item_meta_data,
+	.shop_table .cart_item.evo_event_ticket_item .variation
+	{display: block; font-style: italic;}
+	.shop_table .cart_item.evo_event_ticket_item .item_meta_data span{font-size: 14px;}
+	.shop_table .cart_item.evo_event_ticket_item .item_meta_data span b, 
+	.shop_table .cart_item.evo_event_ticket_item .variation dt
+	{display: block;border-bottom:1px solid #e6e6e6;}
 	.evotx_checkout_additional_names p span{text-transform: capitalize;}
+	.shop_table {}
+
+	form.woocommerce-checkout .evotx_checkout_additional_names .evotx_ticket_additional_info{
+		margin-bottom: 20px;
+	    border-bottom: 1px solid #e6e6e6;
+	    padding-bottom: 10px;
+	}
 	
 /* Responsive */
 	@media (max-width: 650px){
@@ -462,88 +549,46 @@
 	{
 		font-family: 'open sans','arial';
 	}
+
+/* frontend ticekt holders list */
+	.event_tix_attendee_list .evotxVA_ticket{
+		display: flex;
+		padding: 20px;
+		border-bottom: 1px solid #e8e8e8;
+		font-family: 'open sans'
+	}
+	.evotxVA_ticket .evotxVA_data{width: 100%; padding-left: 20px;}
+	.evotxVA_ticket .evotxVA_data span b{font-size: 14px; font-weight: bold;}
+	.evotxVA_ticket .evotxVA_tn{font-weight: bold; font-size: 15px;opacity: 0.6;width: 150px;}
+	.evotxVA_ticket .etxva_tag, .evotxVA_ticket .evotx_status{
+		display: inline-block;
+		border-radius: 20px;
+		text-transform: uppercase;
+		font-size: 10px;
+		padding: 2px 10px;
+		background-color: #b7b7b7;color:#fff;
+		margin-left: 10px;
+		text-decoration: none;
+		position: relative; top: auto; right: auto;float: none;
+	}
+	.evotxVA_ticket .etxva_tag.etxva_s{cursor: pointer;}
+	.evotxVA_ticket .etxva_tag.refunded{background-color: #ff6f6f; color:#fff;}
+	.evotxVA_ticket .etxva_tag:hover{opacity: 0.7;}
+	.evotxVA_ticket .etxva_tag.checkable{cursor: pointer;}
+	.evotxVA_ticket .etxva_tag.evotx_status.check-in{background-color:#ffb546; color:#fff; }
+	.evotxVA_ticket .etxva_tag.evotx_status.checked, .evotxVA_ticket .evotx_status.checked{background-color:#85b74a; color:#fff; }
+	.evotxVA_ticket .etxva_tag.completed{background-color:#5fc7be; color:#fff; }
+	.evotxVA_ticket .etxva_main{display: block;padding-bottom: 5px;}
+	.evotxVA_ticket .etxva_other span{font-size: 12px;margin-right: 10px;opacity: 0.7;        display: block;}
+	.evotxVA_ticket .etxva_other span em{text-transform: capitalize;}
+
 /* actionUser event manager */
-	.event_tix_attendee_list .event_time em{float: right;}
-	.event_tix_attendee_list .evotx_ticketitem_customer {
-		position: relative;
-		padding: 15px 0;
-	}
-	.event_tix_attendee_list .evotx_ticketitem_customer.bad{display: none;}
-	.event_tix_attendee_list .evotx_ticketItem .txcount {
-		background-color: #e4d9cb;
-	    border-radius: 50%;
-	    font-size: 18px;
-	    color: #fff;
-	    height: 40px;
-	    width: 40px;
-	    text-align: center;
-	    box-sizing: border-box;
-	    line-height: 40px;
-	    float: right;
-	}
-	.event_tix_attendee_list b.orderStutus{
-		background-color: #f5ce88;
-	    padding: 3px 8px;
-	    border-radius: 5px;
-	    font-size: 10px;
-	    color: #fff;
-	    text-transform: uppercase;
-	}
-	.event_tix_attendee_list b.orderStutus.status_completed{background-color:#5FC7BE }
-	.event_tix_attendee_list .evotx_ticketItem
-	{display: block;}
-	.event_tix_attendee_list .tixid{display: block; padding-right: 50px;}
-	.event_tix_attendee_list .tixid em{font-size: 12px;}
-	.event_tix_attendee_list .tixid .orderdate{opacity: 0.5;}
-	.event_tix_attendee_list .evotx_ticket{
-		color: #555;
-	    background-color: #f7f7f7;
-	    display: inline-block;
-	    margin: 5px 5px 5px 0;
-	    background-color: #f5f5f5;
-	    padding: 0 10px 1px 10px;
-	    position: relative;
-	    font-style: normal;
-	    font-size: 13px;
-	    line-height: 26px;
-	    height: 28px;
-	    border: 1px solid #ccc;
-	    -webkit-border-radius: 5px;
-	    border-radius: 5px;
-	    -webkit-box-sizing: border-box;
-	    -moz-box-sizing: border-box;
-	    box-sizing: border-box;
-	    opacity: 0.7;
-	}
-	.event_tix_attendee_list .evotx_ticket .evotx_status.checked, 
-	.event_tix_attendee_list .evotx_ticket .evotx_status.checked:hover{background-color: #abda74; color: #fff}
-	.event_tix_attendee_list .evotx_ticket.chkb .evotx_status:hover{background-color: #3d3d3d; color: #fff}
-	.event_tix_attendee_list .evotx_ticket .evotx_status{
-		background-color: #d4d4d4;
-	    display: inline-block;
-	    padding: 0 10px;
-	    color: #525252;	    
-	    position: relative;
-	    text-transform: uppercase;
-	    margin-left: 10px;
-	    font-style: normal;
-	}
-	.event_tix_attendee_list .evotx_ticket.chkb .evotx_status{cursor: pointer;}
-	.event_tix_attendee_list .evotx_ticket .evotx_ticket_holdername{padding-left: 10px;}
-	.event_tix_attendee_list .separatation{
-		display: block;
-	    padding: 10px 25px;
-	    background-color: #e6e6e6;
-	    position: relative;
-	    cursor: pointer;
-	}
-	.event_tix_attendee_list .separatation:after{
-		content: "\f140";
-	    display: inline-block;
-	    font: 400 20px/1 dashicons;
-	    speak: none;
-	    float: right;
-	    -webkit-font-smoothing: antialiased;
-	    -moz-osx-font-smoothing: grayscale;
-	    text-decoration: none!important;
+	
+
+/* ticket holders */
+	.shop_table.ticketholder_details td{padding: 0;}
+	.shop_table.ticketholder_details .evotxVA_ticket{padding: 10px;border-bottom: 1px solid #eaeaea}
+	.shop_table.ticketholder_details .evotxVA_ticket.refunded{
+		background-color: #ff6f6f;
+    	color: #fff;
 	}

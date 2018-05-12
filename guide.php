@@ -15,7 +15,7 @@ echo "
 <p>Go to event edit page. Under Event Ticket box click \"Download Attendees CSV\".</p>
 
 <h4>More Guide Documents</h4>
-<p><a target='_blnka' href='http://www.myeventon.com/documentation'>Online Documentation Library</a></p>
+<p><a target='_blnka' href='http://docs.myeventon.com'>Online Documentation Library</a></p>
 
 ";
 ?>

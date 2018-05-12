@@ -1,19 +1,13 @@
 <?php
-
-	// single product add to cart button for woocommerce
-	// version : 1.3.9
-	
+/**
+ * Single Ticket add to cart section 
+ * @updated 1.6.9
+ */
 ?>
-
 <div class='tx_single'>
-<p itemprop="price" class="price tx_price_line">
-	<span class='label'><?php echo eventon_get_custom_language($opt, 'evoTX_002ff','Price');?></span>
-	<span class='value'><?php echo apply_filters('evotx_single_prod_price', $product->get_price_html(), $object); ?></span>
-</p>
-
 <?php do_action( 'woocommerce_before_add_to_cart_form' ); ?>
 <?php
-	
+
 	$max_quantity = ($tix_inStock) ? 
 		( is_numeric($tix_inStock)? $tix_inStock:''): 
 		($product->backorders_allowed() ? '' : $product->get_stock_quantity());
@@ -23,29 +17,42 @@
 <form class='tx_orderonline_single' data-producttype='single' method="post" enctype='multipart/form-data'>
 	<?php do_action( 'woocommerce_before_add_to_cart_button', $woo_product_id ); ?>
 	<div class='tx_orderonline_add_cart'>
-
+		
 		<?php do_action('evotx_before_single_addtocart', $woo_product_id, $object->event_id);?>
+		
+		<div class='evotx_hidable_section'>
+			<?php
+				// Base Price HTML
+				$base_price = apply_filters('evotx_single_prod_price', $product->get_price(), $object);
+				$tix_helper->base_price_html($base_price);
+			?>
+		
+			<?php if ( ! $product->is_sold_individually() ): ?>
+				<?php $tix_helper->ticket_qty_html( (!empty($max_quantity)? $max_quantity:'na') );	?>
+			<?php endif;?>
+		
+			<?php $tix_helper->total_price_html( $base_price, '', $woo_product_id);?>
+			
+		 	<input type="hidden" name="add-to-cart" value="<?php echo esc_attr( $product->get_id() ); ?>" />
+		 	
+		 	<?php $tix_helper->add_to_cart_btn_html('evoAddToCart single_add_to_cart_button button alt', array(
+		 		'product_id'=>$woo_product_id,
+		 		'l'=>EVO()->lang
+		 	));?>
+					
+			<?php 
+			// show remaining tickets
+				if($event->is_show_remaining_stock()):
+					$tix_helper->remaining_stock_html($tix_inStock, $this->langX('Tickets remaining!', 'evoTX_013') );
+				endif;
+			?>
+			<?php $tix_helper->print_add_to_cart_data();?>
+		
+		</div>
 
-		<?php if ( ! $product->is_sold_individually() ):?>
-		<p class="evotx_quantity">
-			<span class='evotx_label'><?php evo_lang_e('How many tickets?');?></span>
-			<span class="qty">
-				<b class="min evotx_qty_change">-</b>
-				<em>1</em>
-				<b class="plu evotx_qty_change">+</b>
-				<input type="hidden" name='quantity' value='1' max='<?php echo !empty($max_quantity)? $max_quantity:'na';?>'/>
-			</span>
-		</p>
-		<?php endif;?>
-	 	<input type="hidden" name="add-to-cart" value="<?php echo esc_attr( $product->get_id() ); ?>" />
-	 	<button data-product_id='<?php echo $woo_product_id;?>' id='cart_btn' class="evoAddToCart evcal_btn single_add_to_cart_button button alt" data-redirect='<?php echo !empty($ticket_redirect)? $ticket_redirect:'';?>'><?php echo apply_filters(
-	 		'single_add_to_cart_text',
-	 		eventon_get_custom_language($opt, 'evoTX_002','Add to Cart'), 
-	 		$product->get_type(),
-	 		$object->event_id
-	 	); ?></button>
-		<div class="clear"></div>
-
+		<?php $tix_helper->__get_addtocart_msg_footer();?>
+	 	
+		
 		<?php do_action('evotx_after_single_addtocart', $woo_product_id, $object->event_id);?>
 
 	 	<div class="clear"></div>

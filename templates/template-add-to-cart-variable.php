@@ -1,7 +1,7 @@
 <?php
 /**
  * Template for variable item add to cart section
- * @version 0.5
+ * @version 1.7
  */
 
 	wp_enqueue_script( 'wc-add-to-cart-variation' );
@@ -19,6 +19,7 @@
 	<p class='evotx_price_line'><?php echo eventon_get_custom_language($opt, 'evoTX_002ff','Price').' '.$product->get_price_html(); ?></p>
 	<a class='evcal_btn evotx_show_variations'><?php echo eventon_get_custom_language($opt, 'evoTX_002ee','Order Now');?></a>
 </div>
+
 <?php do_action( 'woocommerce_before_add_to_cart_form' ); ?>
 <form style='display:none' class="variations_form cart evotx_orderonline_variable" method="post" enctype='multipart/form-data' data-product_id="<?php echo $woo_product_id; ?>" data-product_variations="<?php echo esc_attr( json_encode( $available_variations ) ) ?>">
 	
@@ -74,34 +75,39 @@
 	<?php do_action( 'woocommerce_before_add_to_cart_button', $woo_product_id ); ?>
 
 	<div class="single_variation_wrap evotx_orderonline_add_cart" style="display:none;">
+		
 		<div class="single_variation"></div>
 		
 		<div class="evotx_variations_soldout" style='display:none'><?php evo_lang_e('This option is sold out!');?></div>
 		<div class='evotx_variation_purchase_section'>
+			
 			<?php if ( ! $product->is_sold_individually() ):?>
-				<p class="evotx_quantity">
-					<span class='evotx_label'><?php evo_lang_e('How many tickets?');?></span>
-					<span class="qty quantity evotx_quantity_adjuster">
-						<b class="min evotx_qty_change">-</b>
-						<em>1</em>
-						<b class="plu evotx_qty_change">+</b>
-						<input type="hidden" class='evotx_input_qty qty' name='quantity' value='1' min=''  max='' />
-					</span>
-				</p>
+				<?php $tix_helper->ticket_qty_html( '' );	?>				
 			<?php endif;?>
+
 			<div class="variations_button">				
 				
 				<a class='evcal_btn evoAddToCart variable_add_to_cart_button' data-product_id='<?php echo $woo_product_id;?>'><?php echo eventon_get_custom_language($opt, 'evoTX_002','Add to Cart');?></a>
 				<input type="hidden" name="variation_id" value="" />
-
-				
 
 				<?php //woocommerce_quantity_input(array(), $product); ?>
 				<input type="hidden" name="add-to-cart" value="<?php echo $woo_product_id; ?>" />
 				<input type="hidden" name="product_id" value="<?php echo esc_attr( $woo_product_id ); ?>" />
 				<div class="clear"></div>
 			</div>
+	
+			<?php 
+				if($event->is_show_remaining_stock()):
+					$tix_helper->remaining_stock_html($tix_inStock, $this->langX('Tickets remaining!', 'evoTX_013') );
+				endif;
+			?>
+
+			<?php $tix_helper->print_add_to_cart_data();?>
+		
+			<?php $tix_helper->__get_addtocart_msg_footer();?>
 		</div>
+
+	 	
 		
 	</div>
 	<?php do_action( 'woocommerce_after_add_to_cart_button' ); ?>

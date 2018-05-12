@@ -1,10 +1,112 @@
 <?php
 /**
  * EventON Ticket corresponding to WC order
+ * CPT evo-tix 
  * @version 0.1
  */
 
 class evotx_tix{
+
+	public $evo_tix_id='';
+
+// Ticket Creation and alteration
+	function create_tickets_for_order($order_id){
+		if(empty($order_id)) return false; 	
+
+		$order = new WC_Order( $order_id );	
+		$items = $order->get_items();
+
+		$TA = new EVOTX_Attendees();
+		$EH = new evo_helper();
+
+		$TH = get_post_meta($order_id, '_tixholders', true);
+			$TH = $TA->_process_ticket_holders( $TH); // process old and new methods of saved ticket holders
+
+		if ( sizeof( $items ) <= 0 ) return false;
+
+		// check if order already have tickets created
+	    	$order_tix = get_post_meta($order_id, '_order_tix', true);
+	    	if($order_tix == 'created') return false;
+
+	    // initials
+	    	$order_has_event_tickets = false;
+	    	$order_ticket_numbers = array();
+
+	    // EACH Order item 
+			foreach ($items as $item_id => $item) {	
+
+				// check order item is a event
+				$event_id = get_post_meta( $item['product_id'], '_eventid', true); 
+			    if(empty($event_id)) continue;	
+
+			    // order item has event tickets
+			    $order_has_event_tickets = true;	
+
+			    $ri = $this->get_ri_from_itemmeta($item);
+
+			    // order purchaser information
+			    $TP = $TA->get_ticket_purchaser($order);
+
+			    // Item type
+			    	$type = 'Normal';
+					if(!empty($item['variation_id'])){
+						$_product = new WC_Product_Variation($item['variation_id'] );
+	        			foreach($_product->get_variation_attributes( ) as $f=>$v){	$type = $v;	}
+	        		}        	
+
+			    // create event ticket for each order item qty
+			    for($Q=0; $Q<$item['qty']; $Q++){
+
+			    	if($created_tix_id = $EH->create_posts(array(
+						'post_type'=>'evo-tix',
+						'post_status'=>'publish',
+						'post_title'=>'TICKET '.date('M d Y @ h:i:sa', time()),
+						'post_content'=>''
+					))){
+
+			    		// set ticket number
+			    		$ticket_number = $created_tix_id.'-'.$order_id.'-'.( !empty($item['variation_id'])? $item['variation_id']: $item['product_id']) . 'T'. $Q;
+			    		$order_ticket_numbers[] = $ticket_number;
+
+			    		// if additional ticket holders saved get ticket holder for this ticket
+			    		$_this_TH = $TH? $TA->__filter_ticket_holder($TH, $event_id, $ri, $Q): $TP;
+
+			    		// get order Item meta values and save to evo-tix post - for easy access	        	
+						// save ticket data	
+						foreach( apply_filters('evotx_tix_save_field_meta', array(
+							'name'			=> isset($_this_TH['name'])? $_this_TH['name']: $TP['name'],
+							'email'			=> isset($_this_TH['email'])? $_this_TH['email']: $TP['email'],
+							'qty'			=> 1,
+							'cost'			=>$order->get_line_subtotal($item),
+							'type'			=>$type,
+							'ticket_ids'	=> array($ticket_number=>'check-in'),							
+							'wcid'			=>$item['product_id'],
+							'tix_status'	=>'none',
+							'status'		=>'check-in',
+							'_eventid'		=>$event_id,
+							'_orderid'		=>$order_id,
+							'_customerid'	=>$TP['customer_id'],
+							'_order_item_id'=>$item_id,
+							'_ticket_number'=> $ticket_number,
+							'_ticket_number_index' =>$Q, // save the index to fetch correct ticket holder
+							'repeat_interval'=>$ri
+						), $item) as $field=>$value){
+							$EH->create_custom_meta($created_tix_id, $field, $value);
+						}
+					}
+			    }			    
+			}
+
+		// if order has event tickets
+			if( $order_has_event_tickets){
+				update_post_meta($order_id, '_order_type','evotix');	
+				update_post_meta($order_id, '_order_tix','created'); 
+			}
+		// add all ticket numbers for this order
+			if(count($order_ticket_numbers)>0){
+				update_post_meta($order_id, '_tixids', $order_ticket_numbers);
+			}
+	}
 
 // Tickets based on WC Order
 	function get_event_id_by_product_id($product_id){
@@ -57,7 +159,16 @@ class evotx_tix{
 		$tt = explode('-', $ticket_number);
 		return (int)$tt[0];
 	}
+	
+	function get_ticket_purchaser_info($ticket_number){
+		$tt = explode('-', $ticket_number);
+		$evotix_meta = get_post_custom($tt[0]);
 
+		return (!empty($evotix_meta['name'])? $evotix_meta['name'][0]:'').' '.
+			(!empty($evotix_meta['email'])? $evotix_meta['email'][0]:'');
+	}
+
+// TICKET HOLDER
 	function get_order_ticket_holders($order_id){
 		$order_ticket_holders = get_post_meta($order_id, '_tixholders', true);
 		return ($order_ticket_holders)? $order_ticket_holders: false;
@@ -70,44 +181,6 @@ class evotx_tix{
 
 		return array_filter($ticket_holders_array[$event_id]);
 	}
-	function get_ticket_purchaser_info($ticket_number){
-		$tt = explode('-', $ticket_number);
-		$evotix_meta = get_post_custom($tt[0]);
-
-		return (!empty($evotix_meta['name'])? $evotix_meta['name'][0]:'').' '.
-			(!empty($evotix_meta['email'])? $evotix_meta['email'][0]:'');
-	}
-	function get_ticket_holder_by_ticket_number($ticket_number, $order_id=''){
-
-		if(empty($order_id)){
-			$tt = explode('-', $ticket_number);
-			$order_id = $tt[1];
-		}
-
-		$order_ticket_number = $this->get_ticket_numbers_for_order($order_id);
-
-		if(empty($order_ticket_number)) return false;
-
-		$all_ticket_holders = $this->get_order_ticket_holders($order_id);
-
-		if(empty($all_ticket_holders)) return false;
-
-		$ticket_holders = array();
-		foreach($all_ticket_holders as $event=>$holders){
-			foreach($holders as $holder){
-				$ticket_holders[] = $holder;
-			}
-		}
-
-		$numberindex = array_search($ticket_number, $order_ticket_number);
-
-		if(isset($ticket_holders[$numberindex])){
-			return $ticket_holders[$numberindex];
-		}
-
-		return false;
-	}
-
 
 // Ticket Quantity related
 	function fix_incorrect_qty($evotix_id){
@@ -117,6 +190,22 @@ class evotx_tix{
 			update_post_meta($evotix_id, 'qty', $qty);
 		}
 	}
+
+// GETTER
+	// from ticket number
+	// @ 1.7
+		function get_data_from_ticket_number($TN){
+			$TN = explode('-', $TN);
+			$output = array();
+			$output['evotix_id'] = $TN[0];
+			$output['order_id'] = $TN[1];
+			$output['wcid'] = $TN[2];
+			if(strpos($TN[2], 'T')!== false){
+				$T = explode('T', $TN[2]);
+				$output['wcid'] = $T[0];
+			}
+			return $output;
+		}
 
 // Ticket status related
 	function get_ticket_numbers_by_evotix($evotix_id, $return_type = 'array'){
@@ -161,6 +250,8 @@ class evotx_tix{
 
 		if($status=='check-in'){
 			return (!empty($evopt[$lang]['evoTX_003x']))? $evopt[$lang]['evoTX_003x']: 'check-in';
+		}elseif($status=='refunded'){
+			return evo_lang('refunded', $lang);
 		}else{
 			return (!empty($evopt[$lang]['evoTX_003y']))? $evopt[$lang]['evoTX_003y']: 'checked';
 		}
@@ -203,7 +294,14 @@ class evotx_tix{
 			return (!empty($status))? $status: 'check-in';
 		}
 	}
-	function change_ticket_number_status($new_status, $ticket_number, $evotix_id){
+	// change ticket number status
+	// @updated 1.7
+	function change_ticket_number_status($new_status, $ticket_number, $evotix_id=''){
+		if(empty($evotix_id)){
+			$evotix_id = explode('-', $ticket_number);
+			$evotix_id = $evotix_id[0];
+		}
+
 		$ticket_ids = get_post_meta($evotix_id, 'ticket_ids',true);
 		if($ticket_ids){
 			unset($ticket_ids[$ticket_number]);
@@ -226,4 +324,25 @@ class evotx_tix{
 	}
 	
 
+// SUPPORTIVE
+	// get repeat interval of an order item from event time
+	    	function get_ri_from_itemmeta($item){
+	    		if( isset($item['_event_ri'])) return $item['_event_ri']; // since 1.6.9
+
+	    		$item_meta = (!empty($item['Event-Time'])? $item['Event-Time']: false);
+		    	$ri = 0;
+		    	
+		    	if($item_meta){
+		    		if(strpos($item_meta, '[RI')!== false){
+		    			$ri__ = explode('[RI', $item_meta);
+				    	$ri_ = explode(']', $ri__[1]);
+				    	$ri = $ri_[0];
+		    		}
+		    	}
+
+		    	return $ri;
+	    	}
+	public function get_prop($field){
+		return get_post_meta($this->evo_tix_id, $field, true);
+	}
 }

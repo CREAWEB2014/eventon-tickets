@@ -18,6 +18,78 @@ jQuery(document).ready(function($){
     });
 
 
+// get ticket product total price
+    $('body').on('evotx_qty_changed', function(event,QTY, MAX, OBJ ){
+        SECTION = OBJ.closest('.evotx_ticket_purchase_section');
+
+        $('body').trigger('evotx_calculate_total', [SECTION]);
+        
+    });
+
+// calculate total price
+    $('body').on('evotx_calculate_total', function(event, SECTION ){
+
+        QTY = SECTION.find('input[name=quantity]').val();
+        sin_price = SECTION.find('p.price.tx_price_line span.value').data('sp');
+        sin_price = parseFloat(sin_price);
+
+        // include sin price additions
+        if( SECTION.find('p.price.tx_price_line input').length>0){
+            DATA = SECTION.find('p.price.tx_price_line input').data('prices');
+
+            price_add = 0;
+            if( Object.keys(DATA).length>0){
+                $.each(DATA, function(index, val){
+                    p =  parseFloat(val.price);
+                    p = p * parseInt( val.qty);
+
+                    price_add += p;
+                })
+            }
+            sin_price += price_add;
+        }
+
+        new_price = sin_price * QTY;       
+        new_price = get_format_price( new_price, SECTION);
+        SECTION.find('.evotx_addtocart_total span.value').html( new_price);
+    });
+
+// GET format the price
+    function get_format_price(price, SECTION){
+
+        // price format data
+        PF = SECTION.find('.evotx_data').data('pf');
+       
+        totalPrice = price.toFixed(PF.numDec); // number of decimals
+        htmlPrice = totalPrice.toString().replace('.', PF.decSep);
+
+        if(PF.thoSep.length > 0) {
+            htmlPrice = _addThousandSep(htmlPrice, PF.thoSep);
+        }
+        if(PF.curPos == 'right') {
+            htmlPrice = htmlPrice + PF.currencySymbol;
+        }
+        else if(PF.curPos == 'right_space') {
+            htmlPrice = htmlPrice + ' ' + PF.currencySymbol;
+        }
+        else if(PF.curPos == 'left_space') {
+            htmlPrice = PF.currencySymbol + ' ' + htmlPrice;
+        }
+        else {
+            htmlPrice = PF.currencySymbol + htmlPrice;
+        }
+        return htmlPrice;
+    }
+    function _addThousandSep(n, thoSep){
+        var rx=  /(\d+)(\d{3})/;
+        return String(n).replace(/^\d+/, function(w){
+            while(rx.test(w)){
+                w= w.replace(rx, '$1'+thoSep+'$2');
+            }
+            return w;
+        });
+    };
+
 // increase and reduce quantity
     $('body').on('click','.evotx_qty_change', function(event){
 
@@ -40,9 +112,8 @@ jQuery(document).ready(function($){
 
         if( QTY != NEWQTY) $('body').trigger('evotx_qty_changed',[NEWQTY, MAX, OBJ]);
        
-
         if(NEWQTY == MAX){
-            
+
             PLU = OBJ.parent().find('b.plu');
             if(!PLU.hasClass('reached')) PLU.addClass('reached');   
 
@@ -79,8 +150,109 @@ jQuery(document).ready(function($){
         FORM.find('.evotx_quantity_adjuster em').html( NEWQTY);
         FORM.find('.evotx_quantity_adjuster input').val( NEWQTY);
     });
+
+// Add to cart custom method
+// this method is used by ticket addons when adding tickets to cart
+// @version 1.7
+    $('body').on('click', '.evotx_addtocart', function(){
+        ajaxdata = {};
+
+        BTN = $(this);
+        SECTION = BTN.closest('.evotx_ticket_purchase_section');
+        EVOROW = BTN.closest('.evorow');  
+        EVOTX_DATA = SECTION.find('.evotx_data');        
+
+        ajaxdata['qty'] = SECTION.find('input[name="quantity"]').val(); 
+        ajaxdata['action'] = 'evotx_add_to_cart';
+        ajaxdata['data'] = EVOTX_DATA.data();
+
+        // check for quantity
+        if( ajaxdata.qty== undefined || ajaxdata.qty=='' || ajaxdata.qty == 0){
+            $('body').trigger('evotx_ticket_msg',[EVOROW,'bad', 't5' ]);
+            return false;
+        }
+
+        $.ajax({
+            beforeSend: function(){ 
+                EVOROW.addClass( 'evoloading');
+            },                  
+            url:    evovo_ajax_obj.ajaxurl,
+            data:   ajaxdata,  dataType:'json', type:  'POST',
+            success:function(data){
+
+                if( data.status == 'good'){                    
+
+                    $('body').trigger('evotx_added_to_cart',[ data, SECTION]);
+                    $('body').trigger('evotx_ticket_msg',[EVOROW,'good']);
+
+                    // if need to be redirected to cart after adding
+                        if(evotx_object.redirect_to_cart == 'cart'){
+                            window.location.href = evotx_object.cart_url;
+                        }else if( evotx_object.redirect_to_cart =='checkout'){
+                            window.location.href = evotx_object.checkout_url;
+                        }else{
+                            $('body').trigger('evo_update_wc_cart');
+                        }  
+                }else{ 
+                    $('body').trigger('evotx_ticket_msg', [EVOROW,'bad', data.msg]);
+                }                
+            },complete:function(){ 
+                EVOROW.removeClass( 'evoloading');
+            }
+        });
+    });
+
+// repopulate evotx_data data values
+    $('body').on('evotx_repopulate_evotx_data', function(event, EVOROW, data){
+        evotx_DATA = $(EVOROW).find('.evotx_data');
+        $.each(data, function(index, value){
+            evotx_DATA.data( index, value);
+        });
+    });
+
+// Show add to cart notification messages
+    $('body').on('evotx_ticket_msg', function(event, EVOROW, STATUS, bad_msg){
+        MSG = $(EVOROW).find('.evotx_addtocart_msg');
+
+        if( !MSG) return false; // if add to cart message section is not present
+
+        evotx_DATA = $(EVOROW).find('.evotx_data').data('t');
+       
+        if(evotx_DATA === undefined) return false;
+        
+        HTML = '';
+        if( STATUS == 'good'){
+            target = evotx_object.tBlank? 'target="_blank"':'';
+            HTML += "<p class='evotx_success_msg'><b>" + evotx_DATA.t1+"!</b>";
+            HTML +="<span><a class='evcal_btn' href='"+evotx_object.cart_url+"' "+target+">"+evotx_DATA.t2 +"</a><em>|</em><a class='evcal_btn' href='"+evotx_object.checkout_url+"' "+target+">"+evotx_DATA.t3+"</a></span></p>";
+
+        }else{
+            bad_msg = bad_msg? evotx_DATA[bad_msg]: evotx_DATA.t4;
+            HTML += "<p class='evotx_success_msg bad'><b>" +bad_msg+"!</b>";
+        }
+
+        // hiding message afterwards
+        MSG_int = $(EVOROW).find('.evotx_data').data('msg_interaction');
+        //console.log(MSG_int);
+        if( MSG_int.hide_after == true ){
+            setTimeout(function(){
+                $('body').trigger('evotx_ticket_msg_hide', [EVOROW]);
+            }, 3000);
+        }
+
+        // redirecting
+        if(MSG_int.redirect != 'nonemore'){
+            $(EVOROW).find('.evotx_hidable_box').hide(); // hide only the hidable section
+        }
+
+        MSG.html(HTML).show();
+    });
+    $('body').on('evotx_ticket_msg_hide',function(event, EVOROW){
+        $(EVOROW).find('.evotx_addtocart_msg').hide();
+    });
     
 // click add to cart for variable product
+// OLD Method
     $('body').on('click','.evoAddToCart', function(e){
 
         e.preventDefault();
@@ -91,20 +263,23 @@ jQuery(document).ready(function($){
 
         // Initial
             TICKET_ROW = thisButton.closest('.evo_metarow_tix');
-            NOTICE_field = TICKET_ROW.find('.tx_wc_notic');
             PURCHASESEC = TICKET_ROW.find('.evoTX_wc');
-
-        // reset
-            NOTICE_field.removeClass('error').hide();
 
         // set cart item additional data
             var ticket_row = thisButton.closest('.evo_metarow_tix');
             var event_id = ticket_row.attr('data-event_id');
             var ri = ticket_row.attr('data-ri');
+            var lang = thisButton.data('l');
             var event_location = thisButton.closest('.evcal_eventcard').find('.evo_location_name').html();
            
             event_location = (event_location !== undefined && event_location != '' )? 
                 encodeURIComponent(event_location):'';
+
+            // passing location values
+               location_str = event_location!= ''? '&eloc='+event_location: '';
+
+            // pass lang
+               lang_str = ( lang !== undefined)? '&lang='+lang:'';
 
             //console.log(event_location);
             
@@ -139,106 +314,110 @@ jQuery(document).ready(function($){
 
                     $.ajax({
                         type: 'POST',data: data_arg,
-                        url: '?add-to-cart='+product_id+'&variation_id='+variation_id+attributes+'&quantity='+quantity +'&ri='+ri+'&eid='+event_id +'&eloc='+event_location,
+                        url: '?add-to-cart='+product_id+'&variation_id='+variation_id+attributes+'&quantity='+quantity +'&ri='+ri+'&eid='+event_id + location_str + lang_str,
                         beforeSend: function(){
                             $('body').trigger('adding_to_cart');
                         },
                         success: function(response, textStatus, jqXHR){
+
                             // Show success message
-                            NOTICE_field.fadeIn();
-                            PURCHASESEC.hide();
+                            $('body').trigger('evotx_ticket_msg',[TICKET_ROW,'good']);
+
                         }, complete: function(){
                             thisButton.closest('.evoTX_wc').removeClass('evoloading');
 
                             // if need to be redirected to cart after adding
-                                if(evotx_object.redirect_to_cart == 'cart'){
-                                    window.location.href = evotx_object.cart_url;
-                                }else if( evotx_object.redirect_to_cart =='checkout'){                                    
-                                    window.location.href = evotx_object.checkout_url;
-                                }else{
-                                    update_wc_cart();
-                                }                        
+                            if(evotx_object.redirect_to_cart == 'cart'){
+                                window.location.href = evotx_object.cart_url;
+                            }else if( evotx_object.redirect_to_cart =='checkout'){
+                                window.location.href = evotx_object.checkout_url;
+                            }else{
+                                update_wc_cart();
+                            }                        
                         }
                     }); 
                 }
 
             // simple item
-            if(thisButton.hasClass('single_add_to_cart_button')){
-                // /console.log('66');
-                
-                TICKET_section = thisButton.closest('.evoTX_wc');
-                QTY_field = TICKET_section.find('input[name=quantity]');
-                
-                var sold_individually = TICKET_section.data('si');
-                var qty = (sold_individually=='yes')? 1: QTY_field.val();
-                var product_id = thisButton.attr('data-product_id');
-                MAX_qty = QTY_field.attr('max');
+                if(thisButton.hasClass('single_add_to_cart_button')){
+                    // /console.log('66');
+                    
+                    TICKET_section = thisButton.closest('.evoTX_wc');
+                    QTY_field = TICKET_section.find('input[name=quantity]');
+                    
+                    var sold_individually = TICKET_section.data('si');
+                    var qty = (sold_individually=='yes')? 1: QTY_field.val();
+                    var product_id = thisButton.attr('data-product_id');
+                    MAX_qty = QTY_field.attr('max');
 
-                //console.log(MAX_qty+' '+qty);
+                    //console.log(MAX_qty+' '+qty);
 
-                // check if max quantity is not exceeded
-                if( MAX_qty != '' && parseInt(MAX_qty) < qty){
-                    NOTICE_field.addClass('error').show();
-                    thisButton.closest('.evoTX_wc').removeClass('evoloading');
-                }else{
+                    // check if max quantity is not exceeded
+                    if( MAX_qty != '' && parseInt(MAX_qty) < qty){
+                        $('body').trigger('evotx_ticket_msg',[TICKET_ROW,'bad']);
+                        thisButton.closest('.evoTX_wc').removeClass('evoloading');
+                    }else{
 
-                    // get data from the add to cart form
-                    dataform = thisButton.closest('.tx_orderonline_single').serializeArray();
-                    var data_arg = dataform;
+                        // get data from the add to cart form
+                        dataform = thisButton.closest('.tx_orderonline_single').serializeArray();
+                        var data_arg = dataform;
 
-                    // passing location values
-                    location_str = event_location!= ''? '&eloc='+event_location: '';
+                        $.ajax({
+                            type: 'POST',
+                            data: data_arg,
+                            url: '?add-to-cart='+product_id+'&quantity='+qty +'&ri='+ri+'&eid='+event_id + location_str + lang_str,
+                            beforeSend: function(){
+                                //$('body').trigger('adding_to_cart');
+                            },
+                            success: function(response, textStatus, jqXHR){
 
-                    $.ajax({
-                        type: 'POST',
-                        data: data_arg,
-                        url: '?add-to-cart='+product_id+'&quantity='+qty +'&ri='+ri+'&eid='+event_id + location_str,
-                        beforeSend: function(){
-                            $('body').trigger('adding_to_cart');
-                        },
-                        success: function(response, textStatus, jqXHR){
+                                // Show success message
+                                $('body').trigger('evotx_ticket_msg',[TICKET_ROW,'good']);
 
-                            // Show success message
-                            NOTICE_field.fadeIn();
-                            PURCHASESEC.hide();
+                            }, complete: function(){
+                                thisButton.closest('.evoTX_wc').removeClass('evoloading');
 
-                        }, complete: function(){
-                            thisButton.closest('.evoTX_wc').removeClass('evoloading');
+                                // reduce remaining qty
+                                /*
+                                    var remainingEL = thisButton.closest('.evcal_evdata_cell').find('.evotx_remaining');
+                                    var remaining_count = parseInt(remainingEL.attr('data-count'));
+                                    
+                                    //console.log(remaining_count);
+                                    if(remaining_count){
+                                    	var new_count = remaining_count-qty;
+                                        new_count = new_count<0? 0: new_count;
+                                       
+                                        // update
+                                            remainingEL.attr({'data-count':new_count}).find('span span').html(new_count);
+                                           	// change input field max value
+                                           		thisButton.siblings('.quantity').find('input.qty').attr('max',new_count);
 
-                            // reduce remaining qty
-                                var remainingEL = thisButton.closest('.evcal_evdata_cell').find('.evotx_remaining');
-                                var remaining_count = parseInt(remainingEL.attr('data-count'));
-                                //console.log(remaining_count);
-                                if(remaining_count){
-                                	var new_count = remaining_count-qty;
-                                    new_count = new_count<0? 0: new_count;
-                                   
-                                    // update
-                                        remainingEL.attr({'data-count':new_count}).find('span').html(new_count);
-                                       	// change input field max value
-                                       		thisButton.siblings('.quantity').find('input.qty').attr('max',new_count);
-
-                                        // hide if no tickets left
-                                        if(new_count==0)    $(this).fadeOut();
-                                }
-                            // if need to be redirected to cart after adding
-                                if(evotx_object.redirect_to_cart == 'cart'){
-                                    window.location.href = evotx_object.cart_url;
-                                }else if( evotx_object.redirect_to_cart =='checkout'){                                    
-                                    window.location.href = evotx_object.checkout_url;
-                                }else{
-                                    update_wc_cart();
-                                } 
-                        }   
-                    });
-                     
+                                            // hide if no tickets left
+                                            if(new_count==0)    $(this).fadeOut();
+                                    }
+                                */
+                               
+                                // if need to be redirected to cart after adding
+                                    if(evotx_object.redirect_to_cart == 'cart'){
+                                        window.location.href = evotx_object.cart_url;
+                                    }else if( evotx_object.redirect_to_cart =='checkout'){                                    
+                                        window.location.href = evotx_object.checkout_url;
+                                    }else{
+                                        update_wc_cart();
+                                    } 
+                            }   
+                        });
+                         
+                    }
                 }
-            }
         
         return false;
     });
 
 // Update mini cart content
+    $('body').on('evo_update_wc_cart',function(){
+        update_wc_cart();
+    });
     function update_wc_cart(){
         var data = {
             action: 'evoTX_ajax_09'
@@ -389,7 +568,7 @@ jQuery(document).ready(function($){
         });
 	
 // ActionUser event manager
-    // show rsvp stats for events
+    // show ticket stats for events
         $('#evoau_event_manager').on('click','a.load_tix_stats',function(event){
             event.preventDefault();
             MANAGER = $(this).closest('.evoau_manager');
@@ -414,30 +593,29 @@ jQuery(document).ready(function($){
         });
 
     // check in attendees
-        $('.evoau_manager_event').on('click','.evotx_status', function(){
+        $('body').on('click','.evotx_status', function(){
             var obj = $(this);
+            if(obj.hasClass('refunded')) return false;
+            if( obj.data('gc')== false) return false;
+           
+            var data_arg = {
+                action: 'the_ajax_evotx_a5',
+                tid: obj.data('tid'),
+                tiid: obj.data('tiid'),
+                status: obj.data('status'),
+            };
+            $.ajax({
+                beforeSend: function(){    obj.html( obj.html()+'...' );  },
+                type: 'POST',
+                url:evotx_object.ajaxurl,
+                data: data_arg,
+                dataType:'json',
+                success:function(data){
+                    obj.data('status', data.new_status)
+                    obj.html(data.new_status_lang).removeAttr('class').addClass('evotx_status '+ data.new_status);
 
-            if( obj.parent().hasClass('chkb') ){
-
-                var data_arg = {
-                    action: 'the_ajax_evotx_a5',
-                    tid: obj.attr('data-tid'),
-                    tiid: obj.attr('data-tiid'),
-                    status: obj.attr('data-status'),
-                };
-                $.ajax({
-                    beforeSend: function(){    obj.html( obj.html()+'...' );  },
-                    type: 'POST',
-                    url:evotx_object.ajaxurl,
-                    data: data_arg,
-                    dataType:'json',
-                    success:function(data){
-                        //alert(data);
-                        obj.attr({'data-status':data.new_status}).html(data.new_status_lang).removeAttr('class').addClass('evotx_status '+ data.new_status);
-
-                    }
-                });
-            }
+                }
+            });
         });
     // open incompleted orders
         $('.evoau_manager_event_content').on('click','span.evotx_incomplete_orders',function(){

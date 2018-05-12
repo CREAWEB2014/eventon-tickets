@@ -7,6 +7,9 @@
 class evotx_actionuser{
 	public function __construct(){
 
+		// stop doing anything if actionUser is not there
+		if(!class_exists('eventon_au')) return false;
+
 		add_filter('evoau_form_fields', array($this, 'fields_to_form'), 10, 1);
 
 		// only for frontend
@@ -25,12 +28,20 @@ class evotx_actionuser{
 		add_action( 'wp_ajax_evotx_ajax_get_auem_stats', array( $this, 'evors_ajax_get_auem_stats' ) );
 		add_action( 'wp_ajax_nopriv_evotx_ajax_get_auem_stats', array( $this, 'evors_ajax_get_auem_stats' ) );
 
+		// user capability
+		add_filter('eventon_core_capabilities',array($this, 'capability'),10, 1);
+
 		// only admin fields
 		if(is_admin()){
 			add_filter('eventonau_language_fields', array($this, 'language'), 10, 1);
 		}
 	}
 
+	// capabilities support for AU
+		function capability($array){
+			//$array[] = '';
+			return $array;
+		}
 	// include ticket script
 		function enqueue_scripts(){
 			wp_enqueue_script('tx_wc_tickets');
@@ -255,7 +266,6 @@ class evotx_actionuser{
 			$__woo_currencySYM = get_woocommerce_currency_symbol();
 
 			$evotx_opt = get_option('evcal_options_evcal_tx');
-			$allowed_checkin = evo_settings_check_yn($evotx_opt, 'evotx_checkin_guests');
 
 
 			?>
@@ -285,101 +295,44 @@ class evotx_actionuser{
 						<?php endif;?>
 
 						<?php 
-							$customer_ = $evotx->functions->get_customer_ticket_list($event_id, $wc_ticket_product_id, 'all');
+							
+							$EA = new EVOTX_Attendees();
+							$TH = $EA->get_tickets_for_event($event_id);
 
-							// customers with completed orders
-							if($customer_){
+							// can user check guests for event tickets
+								$_can_check = false;
 
-								// check permissions to check in guests
-								//$checkinpermission = current_user_can()
+								// if allow event creator to checkin guests enabled via tickets settings
+								if(evo_settings_check_yn($evotx_opt, 'evotx_checkin_guests')) $_can_check = true; 
+
+								// can user edit event via AU function
+								$_au_can_user_edit_event = ( EVOAU()->frontend->functions->can_currentuser_edit_event($event_id, $EPMV) );
+
+								// override actionUser permission
+								if( !$_au_can_user_edit_event ) $_can_check = false;
+
+								// if admin of the site override all and allow
+								if($EA->_user_can_check()) $_can_check = true;
 
 
+							if($TH && count($TH)>0){
 								echo "<tr><td colspan='2'>";
-								echo "<h3>".evo_lang_e('Attendees')."</h3>";
+								echo "<h3>".evo_lang('Attendees')."</h3>";
 								echo "<div class='event_tix_attendee_list'>";
 
-							
-								// each event on the repeat
-								foreach($customer_ as $event_time=>$tickets){
-														
-									$indexO = 1;
-									$content = array();
-									$totalCompleteCount = 0;
+								foreach($TH as $tn=>$td){
 
-									// each ticket Order item
-									foreach($tickets as $ticketItem_){
-										
-										$output = '';
-
-										$order_status = !empty($ticketItem_['order_status'])? $ticketItem_['order_status']: false;
-										$key = ($order_status=='completed')?'good':'bad';
-										$key_ = ($order_status=='completed')?'':'hidden';
-										if($order_status=='completed')$totalCompleteCount += (int)$ticketItem_['qty'];
-
-										// HTML parsing
-										$output .= "<tr><td class='evotx_ticketitem_customer ".($indexO%2==0? 'even':'odd')." {$key} {$key_}'>";
-										$output .= "<span class='evotx_ticketitem_header'>"
-											.'<b>'.$ticketItem_['name'].'</b>  ('.$ticketItem_['email'].') '.( !empty($ticketItem_['type'])? "- <b>{$ticketItem_['type']}</b>":''). 
-											( $order_status? " <b class='orderStutus status_{$order_status}'>{$order_status}</b>":'') ."</span>";
-										$output .= "<span class='evotx_ticketItem'><span class='txcount'>{$ticketItem_['qty']}</span>";
-
-										$tid = $ticketItem_['tids']; // ticket ID array with status
-										
-
-										$output .= "<span class='tixid'>";
-
-										// Ticket Holder information
-											$order_ticket_holders = get_post_meta($ticketItem_['orderid'], '_tixholders', true);
-											$ticket_holder = $evotx->functions->get_ticketholder_names( $event_id,$order_ticket_holders);
-										
-										// for each ticket ID
-										$index = 0;
-										foreach($tid as $id=>$_status){
-											$langStatus = $evotx->functions->get_checkin_status($_status);
-											$output .= "<span class='evotx_ticket ".($allowed_checkin?'chkb':'nb')."'>".$id;
-											if($order_status == 'completed'){
-												$output .= "<span class='evotx_status {$_status}' data-tid='{$id}' data-status='{$_status}' data-tiid='{$ticketItem_['tiid']}'>".$langStatus."</span>";
-
-												// Ticket holder name associated to 
-												if($ticket_holder && !empty($ticket_holder[$index]))
-													$output .= "<span class='evotx_ticket_holdername'>".$ticket_holder[$index]."</span>";
-											}
-											$output .= "</span>";
-											$tidX = $id;
-											$index++;
-										}
-
-										$tix = explode('-', $tidX);
-										$orderID = $tix[1];
-
-										$output .= "<span class='clear'></span>
-											<em class='orderdate'>".__('Ordered Date','evotx').': '.$ticketItem_['postdata']."</em>";
-											$output .= " <em>".__('Order ID:','evotx')." ".$orderID."</em>";
-										$output .= "</span>";
-
-
-										$output .= "</span>";
-										$output .= "</td></tr>";
-
-										
-										$content[$key][] = $output;
-										$indexO++;
-									}
-
-
-									echo "<table class='attendee'><tbody>";
-									echo "<tr><td class='event_time'>".
-										__('Event Time:','evotx').' '.$event_time."<em>".__('Total','evotx')." {$totalCompleteCount}</em>".
-										"</td></tr>";
-									if(!empty($content['good']))	echo implode('', $content['good']);
-									echo "<tr><td><span class='separatation evotx_incomplete_orders'>".__('Other incompleted orders','evotx')."</span></tr></td>";
-									if(!empty($content['bad'])) echo implode('', $content['bad']);
-
-									echo "</tbody></table>";					
+									echo $EA->__display_one_ticket_data($tn, $td, array(
+										'showStatus'=> $_can_check,
+										'showOrderStatus'=>true,
+										'guestsCheckable'=>$_can_check,
+									));
 								}
+
 								echo "</div>";
 								echo "</tr>";
 							}
+
 						?>					
 					</table>
 				</div>

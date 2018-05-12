@@ -1,5 +1,37 @@
 Tickets (TX) addon for EventON Plugin
 ====================================
+v 1.7 (2018-5-9)
+ADDED: option to set event stop selling tickets time base
+ADDED: New Sales insight visual data for each event
+ADDED: event repeat instance save into order item meta instead of event time
+ADDED: new filters for ticket addons that reduce duplicate filters
+ADDED: javascript trigger on admin when view attendees lightbox loaded
+ADDED: Extended helper class to support more elements for ticket extensions
+ADDED: Ticket holder information to show in order complete WC email
+ADDED: filterable view attendees list on event edit
+ADDED: each ticket to create separate evo-tix entry
+ADDED: Partial order refunds to refund individual event tickets
+ADDED: actionUser guest checkin only if permission allowed
+ADDED: wcid to frontend ticket data row
+ADDED: After added to cart pass values as filter
+ADDED: eventon global language variable passed into ticket order
+ADDED: Ticket language values passed into cart
+FIXED: event time in emails not capitalized
+FIXED: send attendee list email message not stripping slashes and formating html
+FIXED: open view cart and checkout in new window not working
+FIXED: additional guests names validation to check for longer strings
+FIXED: Order details page not showing event name under products purchased
+FIXED: guest list to not include refunded tickets or orders
+FIXED: setting event top tag sold out to hidden also hide event over tag
+UPDATED: Event edit attendee information layout
+UPDATED: Ticket helper class
+UPDATED: cart meta data display layout
+UPDATED: Woocommerce filters into its own file
+UPDATED: layout design for view attendees list
+UPDATED: layout design for ticket holder list on admin and frontend
+UPDATED: Consistent colors for order and ticket status buttons everywhere
+UPDATED: ticket confirmation email to be viewed from wp-admin using debug=true
+
 v 1.6.8 (2018-2-8)
 FIXED: additional guest names field continuly asking for value
 FIXED: event edit meta box styles with new evo 2.6.6 styles

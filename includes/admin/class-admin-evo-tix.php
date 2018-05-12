@@ -104,10 +104,11 @@ class evotx_tix_cpt{
 
 			$columns['tix'] = __( 'Event Ticket(s)', 'evotx' );
 			$columns['tix_status'] = __( 'Status', 'evotx' );
-			//$columns["qty"] = __( 'Quantity', 'evotx' );
-			$columns["date"] = __( 'Date', 'evotx' );
+			$columns['tix_wcid'] = __( 'Order ID', 'evotx' );
+			
 			$columns["tix_event"] = __( 'Event', 'evotx' );
-			$columns["tix_type"] = __( 'Ticket Type', 'evotx' );				
+			$columns["tix_type"] = __( 'Ticket Type', 'evotx' );
+			$columns["date"] = __( 'Date', 'evotx' );				
 			
 
 			return array_merge( $columns, $existing_columns );
@@ -119,27 +120,35 @@ class evotx_tix_cpt{
 
 			$meta = get_post_meta($post->ID); // ticket item meta
 			
-			$evotx_tix = new evotx_tix();
+			$evotx_tix = $ET = new evotx_tix();
+			$ET->evo_tix_id = $post->ID;
 
-			switch ($column) {		
+
+
+			switch ($column) {	
+				case 'tix_wcid':
+					$wcid = $ET->get_prop('_orderid');
+					echo '<a class="row-title" href="'.get_edit_post_link( $wcid ).'">' . $wcid.'</a>';
+				break;
 				case "tix":
-					$tix_pmv = get_post_custom($post->ID);
+					// new method 1.7
+					if( $ET->get_prop('_ticket_number') ){
+						echo "<strong><a class='row-title' href='". get_edit_post_link( $post->ID ) ."'>#".$ET->get_prop('_ticket_number')."</a></strong> by ".$ET->get_prop('name')." ".$ET->get_prop('email');
+						echo "</span>";
+					}else{
+						$edit_link = get_edit_post_link( $post->ID );
+						$cost = $ET->get_prop('cost');
 
-					$edit_link = get_edit_post_link( $post->ID );
-					$tid = (!empty($meta['tid']))? $meta['tid'][0]: null;
-					$qty = !empty($tix_pmv['qty'])? $tix_pmv['qty'][0]: '-';
-					$cost = !empty($tix_pmv['cost'])? $tix_pmv['cost'][0]: '-';		
-					$orderID = !empty($tix_pmv['_orderid'])? $tix_pmv['_orderid'][0]: '-';	
+						echo "<strong><a class='row-title' href='".$edit_link."'>#{$post->ID}</a></strong> by ".$meta['name'][0]." ".$meta['email'][0];
 
-					echo "<strong><a class='row-title' href='".$edit_link."'>#{$post->ID}</a></strong> by ".$meta['name'][0]." ".$meta['email'][0];
+						// get ticket ids
+						$tix_id_ar = $evotx_tix->get_ticket_numbers_by_evotix($post->ID, 'string');
 
-					// get ticket ids
-					$tix_id_ar = $evotx_tix->get_ticket_numbers_by_evotix($post->ID, 'string');
+						echo '<br/><em class="lite">Ticket ID(s):</em> <i>'.$tix_id_ar.'</i>';
 
-					echo '<br/><em class="lite">Ticket ID(s):</em> <i>'.$tix_id_ar.'</i>';
-
-					echo '<br/><span class="evotx_intrim">'.$qty.' <em class="lite">(Qty)</em> - '. ((!empty($cost))? get_woocommerce_currency_symbol().apply_filters('woocommerce_get_price', $cost): '-').'<em class="lite"> (Total)</em></span>';
-					echo "<br/><span class='evotx_ids' style='opacity:0.4'>WC ORDER ID: {$orderID}</span>";
+						echo '<br/><span class="evotx_intrim">'. $ET->get_prop('qty') .' <em class="lite">(Qty)</em> - '. ((!empty($cost))? get_woocommerce_currency_symbol().apply_filters('woocommerce_get_price', $cost): '-').'<em class="lite"> (Total)</em></span>';
+					}
+					
 				break;
 				case "tix_event":
 					$e_id = (!empty($meta['_eventid']))? $meta['_eventid'][0]: null;
@@ -152,43 +161,47 @@ class evotx_tix_cpt{
 				case "tix_type":
 					$type = get_post_meta($post->ID, 'type', true);						
 					echo (!empty($type))? $type: '-';
-
 				break;
 				
 				case "tix_status":
-
-					$checked_count = $evotx_tix->checked_count($post->ID);
-					$status = 'checked';
-
-					$checked_count_ = !empty($checked_count['checked'])? $checked_count['checked']:'0';
-					
-					// if all checked 
-						$_checked_class = ($checked_count_ == $checked_count['qty'])? 'checked':'check-in';
-
-					// different state on checked tickets
-						if($checked_count['qty'] == '1' && $checked_count_=='0' ){
-							$display = $evotx_tix->get_checkin_status_text('check-in');
-						}elseif(($checked_count['qty'] == '1' && $checked_count_=='1')|| ($checked_count['qty']>1 && $checked_count['qty'] == $checked_count_)){
-							$display = $evotx_tix->get_checkin_status_text('checked');
-						}else{
-							$display = $evotx_tix->get_checkin_status_text($status).' '.$checked_count_.'/'.$checked_count['qty'];
-						}
-
-
 					// order
-						$_orderid = get_post_meta($post->ID, '_orderid', true);	
-						
-						if($_orderid){	
-							//if( get_post_status($_orderid) =='publish')
-							$order = new WC_Order( $_orderid );
+						$order_id = $ET->get_prop('_orderid');
+						$order_status = 'n/a';							
+						if($order_id){	
+							$order = new WC_Order( $order_id );
 							$order_status = $order->get_status();
-						}else{ 
-							$order_status = 'n/a';
 						}
 
-					echo "<p class='evotx_status_list {$order_status}'><em class='lite'>".__('Order','evotx').":</em> ".$order_status ."</p>";
+					// new method 1.7
+					if( $tn= $ET->get_prop('_ticket_number') ){
+						$tickets = $ET->get_prop('ticket_ids');
+						$this_ticket_status = isset($tickets[$tn])? $tickets[$tn]: $ET->get_prop('status');
 
-					echo "<p class='evotx_status_list {$_checked_class}'><em class='lite'>".__('Ticket','evotx').":</em> <span class='tixstatus'>".$display."</span></p>";		
+						$display = $_checked_class = $this_ticket_status;
+					}else{
+						$checked_count = $evotx_tix->checked_count($post->ID);
+						$status = 'checked';
+
+						$checked_count_ = !empty($checked_count['checked'])? $checked_count['checked']:'0';
+						
+						// if all checked 
+							$_checked_class = ($checked_count_ == $checked_count['qty'])? 'checked':'check-in';
+
+						// different state on checked tickets
+							if($checked_count['qty'] == '1' && $checked_count_=='0' ){
+								$display = $evotx_tix->get_checkin_status_text('check-in');
+							}elseif(($checked_count['qty'] == '1' && $checked_count_=='1')|| ($checked_count['qty']>1 && $checked_count['qty'] == $checked_count_)){
+								$display = $evotx_tix->get_checkin_status_text('checked');
+							}else{
+								$display = $evotx_tix->get_checkin_status_text($status).' '.$checked_count_.'/'.$checked_count['qty'];
+							}						
+					}					
+
+					echo "<p class='evotx_status_list {$order_status}'><em class='lite'>".__('Order','evotx').":</em> <span class='evotx_wcorderstatus {$order_status}'>".$order_status ."</span></p>";
+
+					if( $order_status == 'completed'){
+						echo "<p class='evotx_status_list {$_checked_class}'><em class='lite'>".__('Ticket','evotx').":</em> <span class='evotx_status {$_checked_class}'>".$display."</span></p>";	
+					}	
 
 				break;
 			}

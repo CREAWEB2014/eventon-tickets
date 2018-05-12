@@ -9,50 +9,50 @@ class evotx_functions{
 		$this->EH = new evo_helper();
 	}
 
-	// ORDER Related
-		// get order status from order ID
-			function get_order_status($orderid=''){
-				if(empty($orderid)) return false;
-				$orderstatus = get_post_status($orderid);
-				$orderstatus = str_replace('wc-', '', $orderstatus);
-				$orderstatus = str_replace('-', ' ', $orderstatus);
+// ORDER Related
+	// get order status from order ID
+		function get_order_status($orderid=''){
+			if(empty($orderid)) return false;
+			$orderstatus = get_post_status($orderid);
+			$orderstatus = str_replace('wc-', '', $orderstatus);
+			$orderstatus = str_replace('-', ' ', $orderstatus);
 
-				return $orderstatus;
+			return $orderstatus;
+		}
+		function is_order_complete($orderid){
+			return ($this->get_order_status($orderid)=='completed')? true: false;
+		}
+// CHECKING TICKET STATUS related
+	// get proper ticket status name I18N
+		function get_checkin_status($status, $lang=''){
+			global $evotx;
+			$evopt = $evotx->opt2;
+			$lang = (!empty($lang))? $lang : 'L1';
+
+			if($status=='check-in'){
+				return (!empty($evopt[$lang]['evoTX_003x']))? $evopt[$lang]['evoTX_003x']: 'check-in';
+			}else{
+				return (!empty($evopt[$lang]['evoTX_003y']))? $evopt[$lang]['evoTX_003y']: 'checked';
 			}
-			function is_order_complete($orderid){
-				return ($this->get_order_status($orderid)=='completed')? true: false;
-			}
-	// CHECKING TICKET STATUS related
-		// get proper ticket status name I18N
-			function get_checkin_status($status, $lang=''){
-				global $evotx;
-				$evopt = $evotx->opt2;
-				$lang = (!empty($lang))? $lang : 'L1';
+		}
+		function get_statuses_lang($lang=''){
+			global $evotx;
+			$evopt = $evotx->opt2;
+			$lang = (!empty($lang))? $lang : 'L1';
 
-				if($status=='check-in'){
-					return (!empty($evopt[$lang]['evoTX_003x']))? $evopt[$lang]['evoTX_003x']: 'check-in';
-				}else{
-					return (!empty($evopt[$lang]['evoTX_003y']))? $evopt[$lang]['evoTX_003y']: 'checked';
-				}
-			}
-			function get_statuses_lang($lang=''){
-				global $evotx;
-				$evopt = $evotx->opt2;
-				$lang = (!empty($lang))? $lang : 'L1';
+			return array(
+				'check-in'=> ((!empty($evopt[$lang]['evoTX_003x']))? $evopt[$lang]['evoTX_003x']: 'check-in'),
+				'checked'=> ((!empty($evopt[$lang]['evoTX_003y']))? $evopt[$lang]['evoTX_003y']: 'checked'),
+			);
+		}
 
-				return array(
-					'check-in'=> ((!empty($evopt[$lang]['evoTX_003x']))? $evopt[$lang]['evoTX_003x']: 'check-in'),
-					'checked'=> ((!empty($evopt[$lang]['evoTX_003y']))? $evopt[$lang]['evoTX_003y']: 'checked'),
-				);
-			}
+	// check if an order have event tickets
+		public function does_order_have_tickets($order_id){
+			$meta = get_post_meta($order_id, '_tixids', true);
+			return (!empty($meta))? true: false;
+		}		
 
-		// check if an order have event tickets
-			public function does_order_have_tickets($order_id){
-				$meta = get_post_meta($order_id, '_tixids', true);
-				return (!empty($meta))? true: false;
-			}		
-
-	// TICKET related
+// TICKET related
 		// get additional ticket holder array
 		// **maybe deprecated
 			function get_ticketholder_names($event_id, $ticketholder_array=''){
@@ -71,134 +71,6 @@ class evotx_functions{
 				return $product->get_type();
 			}
 		
-		// create evo tickets for an order
-			function create_tickets($order_id){
-				$order = new WC_Order( $order_id );	
-			    $items = $order->get_items();
-
-			    $evtix_update = false;
-
-			    if ( sizeof( $items ) <= 0 ) return;
-
-			    // check if order already have tickets created
-			    	$order_tix = get_post_meta($order_id, '_order_tix', true);
-			    	if($order_tix == 'created') return ;
-			    
-			    // for each order item
-			    foreach ($items as $item_id => $item) {	
-
-			    	$tixids = array();			    	
-
-			    	// validate required fields
-			    		if(empty($order_id)) continue; 	
-			    		$eid = get_post_meta( $item['product_id'], '_eventid', true); 
-			    		if(empty($eid)) continue;			    		
-
-		    		// Specify order type only for ticket sale
-				    	if(!$evtix_update){
-				    		update_post_meta($order_id, '_order_type','evotix');	
-				    		$evtix_update = true;
-				    	}  
-
-			    	// let the order know event tickets have been created for order items
-			    		update_post_meta($order_id, '_order_tix','created');  		
-
-		    		// get repeat interval for order item
-				    	$ri = $this->get_ri_from_itemmeta($item);
-
-				    // Get customer information
-				    	$order_meta = get_post_custom($order_id, true);	    	    
-				    	$user_id_ = $order_meta['_customer_user'][0];	
-				    	if($user_id_ == 0){	// checkout without creating account
-				    		$_user = array(
-		    					'name'=>$order_meta['_billing_first_name'][0].' '.$order_meta['_billing_last_name'][0],
-		    					'email'=>$order_meta['_billing_email'][0]
-		    				);
-				    	}else{
-				    		// get the logged in user information
-				    		$usermeta = get_user_meta( $user_id_ );
-				    		$fname = !empty($usermeta['first_name'][0])? $usermeta['first_name'][0]: $order_meta['_billing_first_name'][0];
-				    		$lname = !empty($usermeta['last_name'][0])? $usermeta['last_name'][0]: $order_meta['_billing_last_name'][0];
-		    				
-		    				$_user = array(
-		    					'name'=>$fname.' '.$lname,
-		    					'email'=>$usermeta['billing_email'][0]
-		    				);
-				    	}
-		    		
-		        	// create new event ticket post
-		        	if($created_tix_id = $this->EH->create_posts(array(
-						'post_type'=>'evo-tix',
-						'post_status'=>'publish',
-						'post_title'=>'TICKET '.date('M d Y @ h:i:sa', time()),
-						'post_content'=>''
-					))){
-
-						$ticket_ids = $ticket_ids_ = array();
-						
-						// variation product
-							$type = 'Normal';
-							if(!empty($item['variation_id'])){
-								$_product = new WC_Product_Variation($item['variation_id'] );
-			        			$hh= $_product->get_variation_attributes( );
-
-			        			foreach($hh as $f=>$v){
-			        				$type = $v;
-			        			}
-			        		}
-
-			        	// ticket ID(s)
-				        	$tid = $created_tix_id.'-'.$order_id.'-'.( !empty($item['variation_id'])? $item['variation_id']: $item['product_id']);
-							if($item['qty']>1){
-								$_tid='';
-								$str = 'A';
-								for($x=0; $x<$item['qty']; $x++){ // each ticket in item
-									$strng = ($x==0)? $str: ++$str;
-									$ticket_ids[$tid.$strng] = 'check-in';
-									$ticket_ids_[] = $tid.$strng;
-								}
-							}else{ // just one ticket
-								$ticket_ids[$tid] = 'check-in';
-								$ticket_ids_[] = $tid;
-							}
-
-						// get order Item meta values and save to evo-tix post - for easy access
-	        	
-						// save ticket data	
-							foreach( apply_filters('evotx_tix_save_field_meta', array(
-								'name'			=>$_user['name'],
-								'email'			=>$_user['email'],
-								'qty'			=>$item['qty'],
-								'cost'			=>$order->get_line_subtotal($item),
-								'type'			=>$type,
-								'ticket_ids'	=>$ticket_ids,
-								'wcid'			=>$item['product_id'],
-								'tix_status'	=>'none',
-								'status'		=>'check-in',
-								'_eventid'		=>$eid,
-								'_orderid'		=>$order_id,
-								'_customerid'	=>$user_id_,
-								'_order_item_id'=>$item_id,
-								'repeat_interval'=>$ri
-							), $item) as $field=>$value){
-								$this->EH->create_custom_meta($created_tix_id, $field, $value);
-							}
-
-							// save event ticket id to order id
-								$tixids = get_post_meta($order_id, '_tixids', true);
-
-								if(is_array($tixids)){ // if previously saved tixid array
-									$tixids_ = array_merge($tixids, $ticket_ids_);
-								}else{ // empty of saved as string
-									$tixids_ = $ticket_ids_;
-								}
-								// save ticket ids as array
-								update_post_meta($order_id, '_tixids', $tixids_);
-					}
-
-				}// END FOREEACH
-			}
-
 		// alter initial WC order if they are event ticket orders
 			function alt_initial_event_order($order_id){
 				$order = new WC_Order( $order_id );	
@@ -231,108 +103,7 @@ class evotx_functions{
 				}				
 				update_post_meta($ticket_item_id, 'ticket_ids',$ticket_ids);
 			}
-		// add ticket quantity back to stock
-			function restock_tickets($order_id){
-				global $evotx;
-				
-				// if set to auto restock
-				if( evo_settings_val( 'evotx_restock',$evotx->evotx_opt)){
-						
-					// check if the stock was reduced when order placed
-					$order_stock_reduced = get_post_meta($order_id, '_order_stock_reduced',true);
-
-					// if stock is not reduced exit
-					if( !$order_stock_reduced) return false;
-
-					$order = new WC_Order( $order_id );	
-			    	$items = $order->get_items();
-			    	
-			    	if(sizeof( $items ) <= 0) return false;
-
-			    	// each order item in the order
-			    	foreach ($items as $item) {
-
-			    		if ( $item['product_id'] > 0 ) {
-
-				    		$_product = $order->get_product_from_item( $item );
-
-				    		if ( $_product && $_product->exists() && $_product->managing_stock() ) {
-
-					    		$eid = get_post_meta( $item['product_id'], '_eventid', true);  
-
-					    		if(empty($eid)) continue; // skip non ticket items
-
-					    		$old_stock = $_product->stock;
-					    		$qty = apply_filters( 'woocommerce_order_item_quantity', $item['qty'], $order, $item );
-					    		$new_quantity = $_product->increase_stock( $qty );
-					    		$item_name    = $_product->get_sku() ? $_product->get_sku(): $item['product_id'];
-
-					    		// find repeat interval of the event item 
-					    			$ri = $this->get_ri_from_itemmeta($item);
-				    				// update the repeat stock, if keeping track of
-				    				$this->update_repeat_capacity($qty, $ri, $eid );
-
-					    		$order->add_order_note( sprintf( __( 'Item #%s stock incremented from %s to %s.', 'evotx' ), $item_name, $old_stock, $new_quantity) );
-
-					    		$order->send_stock_notifications( $_product, $new_quantity, $item['qty'] );
-					    	}
-					    }
-			    	}
-			    	/// woocommerce_auto_stock_restored
-					do_action( 'woocommerce_restore_order_stock', $order );
-
-			    	// mark woocommerce product back in stock
-			    	//update_post_meta($item['product_id'], '_stock_status','instock');
-				}
-			}
-
-			function reduce_stock($order_id){
-				global $evotx;
-				// if set to auto restock
-				if( evo_settings_val( 'evotx_restock',$evotx->evotx_opt)){
-					
-					$order = new WC_Order( $order_id );	
-
-					if(sizeof( $order->get_items() ) <= 0) return false;
-			    	
-			    	// each order item in the order
-			    	foreach ( $order->get_items() as $item) {
-
-			    		if ( $item['product_id'] > 0 ) {
-
-				    		$_product = $order->get_product_from_item( $item );
-
-				    		if ( $_product && $_product->exists() && $_product->managing_stock() ) {
-
-					    		$eid = get_post_meta( $item['product_id'], '_eventid', true);  
-
-					    		if(empty($eid)) continue; // skip non ticket items
-
-					    		$qty   = apply_filters( 'woocommerce_order_item_quantity', $item['qty'], $order, $item );
-					    		$new_quantity = $_product->reduce_stock( $qty );
-					    		$item_name = $_product->get_sku() ? $_product->get_sku(): $item['product_id'];
-					    		
-					    		// find repeat interval of the event item 
-					    			$ri = $this->get_ri_from_itemmeta($item);
-				    				// update the repeat stock, if keeping track of
-				    				$qty_adjust = (int)$item['qty']*-1;
-				    				$this->update_repeat_capacity($qty_adjust, $ri, $eid );
-
-					    		if ( isset( $item['variation_id'] ) && $item['variation_id'] ) {
-									$order->add_order_note( sprintf( __( 'Item %1$s variation #%2$s stock reduced from %3$s to %4$s.', 'evotx' ), $item_name, $item['variation_id'], $new_quantity + $qty, $new_quantity) );
-								} else {
-									$order->add_order_note( sprintf( __( 'Item %1$s stock reduced from %2$s to %3$s.', 'evotx' ), $item_name, $new_quantity + $qty, $new_quantity) );
-								}
-
-					    		$order->send_stock_notifications( $_product, $new_quantity, $item['qty'] );
-					    	}
-					    }
-			    	}
-
-			    	do_action( 'woocommerce_reduce_order_stock', $order );
-				}
-			}
-
+	
 		// ADD NEW matching woocommerce product
 			function add_new_woocommerce_product($post_id){
 				$user_ID = get_current_user_id();
@@ -473,7 +244,12 @@ class evotx_functions{
 				}				
 			}
 
-	// return customer tickets array by event id and product id
+// Event Ticket POST
+
+	// FOR an EVENT: return customer tickets array by event id and product id
+	// Main function to get all attendees 
+	// @ will be deprecating
+	// @updated 1.7
 		function get_customer_ticket_list($event_id, $wcid='', $ri='', $sep_by= 'event_time', $entries = -1, $WP_Arg=''){
 			global $post;
 			$existing_post = $post;
@@ -489,8 +265,7 @@ class evotx_functions{
 			$w_pmv = get_post_custom($wcid);
 			$ri_count_active = $this->is_ri_count_active($e_pmv, $w_pmv);
 
-			// get all ticket items matching product id and event id
-			
+			// get all ticket items matching product id and event id			
 			if(empty($WP_Arg)){
 				// Meta query
 					if(empty($wcid)){
@@ -627,10 +402,16 @@ class evotx_functions{
 							// get ticket numbers
 							$ticketids = $evotx_tix->get_ticket_numbers_by_evotix($ticketItems->post->ID);
 
+							// tickets			
+								$TA = new EVOTX_Attendees();
+								$order_ticket_holders = $TA->_get_tickets_for_order($order_id);
+								
+
 							$customer_[$event_time][$tiid] = array(
 								'name'=>$tii_meta['name'][0],
 								'tiid'=>$tiid,
 								'tids'=>$ticketids,
+								'tickets'=> (isset($order_ticket_holders[$event_id])? $order_ticket_holders[$event_id]:array()),
 								'email'=>$tii_meta['email'][0],						
 								'type'=>$tii_meta['type'][0],					
 								'qty'=>$tii_meta['qty'][0],
@@ -692,6 +473,7 @@ class evotx_functions{
 
 	// CHECK functions
 		// show remaining stock or not
+		// @deprecating
 			function show_remaining_stock($epmv, $woometa){
 				$_show_remain_tix = evo_check_yn($epmv, '_show_remain_tix');
 				if(!$_show_remain_tix) return false;
@@ -748,8 +530,6 @@ class evotx_functions{
 				}
 			}
 
-
-
 		// check if the event tickets is set to stop selling X minuted before it closes
 		// @deprecating in class event tickets
 			function stop_selling_now($eventPMV,$ri=0){
@@ -793,8 +573,7 @@ class evotx_functions{
 				'_xmin_stopsell',
 				'_tx_show_guest_list');
 	}
-
-
+	
 // SUPPORTIVE
 		function get_author_id() {
 			$current_user = wp_get_current_user();
@@ -806,6 +585,9 @@ class evotx_functions{
 
 	    // get repeat interval of an order item from event time
 	    	function get_ri_from_itemmeta($item){
+
+	    		if( isset($item['_event_ri'])) return $item['_event_ri']; // since 1.6.9
+
 	    		$item_meta = (!empty($item['Event-Time'])? $item['Event-Time']: false);
 		    	$ri = 0;
 		    	

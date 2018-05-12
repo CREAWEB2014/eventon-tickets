@@ -4,10 +4,10 @@
  * Plugin URI: http://www.myeventon.com/
  * Description: Sell Event Tickets using Woocommerce
  * Author: Ashan Jay
- * Version: 1.6.8
+ * Version: 1.7
  * Author URI: http://www.ashanjay.com/
  * Requires at least: 4.0
- * Tested up to: 4.9.1
+ * Tested up to: 4.9.5
  *
  * Text Domain: evotx
  * Domain Path: /lang/
@@ -21,8 +21,8 @@ if ( ! defined( 'ABSPATH' ) ) exit;
 //Event tickets main class
 if ( ! class_exists( 'evotx' ) ):
 class evotx{	
-	public $version='1.6.8';
-	public $eventon_version = '2.6.6';
+	public $version='1.7';
+	public $eventon_version = '2.6.9';
 	public $wc_version = '3.1';
 	public $wc_max_version = '3.2';
 	public $name = 'Tickets';
@@ -112,20 +112,25 @@ class evotx{
 		}
 	
 	/** Include required core files. */
-		function includes(){			
+		function includes(){
+
+			//return false;
+
 			// both front and admin
+			include_once( $this->plugin_path . '/includes/class-templates.php' );
 			include_once( $this->plugin_path . '/includes/class-helper.php' );
 			include_once( $this->plugin_path . '/includes/class-event_ticket.php' );
 			include_once( $this->plugin_path . '/includes/class-post-types.php' );
 			include_once( $this->plugin_path . '/includes/class-email.php' );
 			include_once( $this->plugin_path . '/includes/class-evo-tix.php' );		
-			include_once( $this->plugin_path . '/includes/class-bothends.php' );
+			include_once( $this->plugin_path . '/includes/class-attendees.php' );	
+					
+					
 			include_once( $this->plugin_path . '/includes/class-integration-general.php' );
 			include_once( $this->plugin_path . '/includes/class-integration-actionuser.php' );
 			include_once( $this->plugin_path . '/includes/class-integration-countdown.php' );
 			include_once( $this->plugin_path . '/includes/class-appearance.php' );
-			$this->bothends = new evotx_bothends();		
-
+			
 			include_once($this->plugin_path . '/includes/class-functions.php');
 			$this->functions = new evotx_functions();
 			$this->email = new evotx_email();
@@ -143,6 +148,9 @@ class evotx{
 			if ( defined('DOING_AJAX') ){
 				include_once( $this->plugin_path . '/includes/class-ajax.php' );
 			}
+
+			include_once( $this->plugin_path . '/includes/class-integration-woocommerce.php' );
+
 		}
 
 		function evotx_tix(){

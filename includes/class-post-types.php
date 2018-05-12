@@ -28,7 +28,9 @@ class evotx_post_types{
 						'public' 				=> true,
 						'show_ui' 				=> true,
 						'capability_type' 		=> 'eventon',
-						'capabilities'			=>array('create_posts'=>false),
+						'capabilities'			=>array(
+							'create_posts'=>false
+						),
 						'map_meta_cap'			=> true,
 						'exclude_from_search'	=> true,
 						'publicly_queryable' 	=> true,

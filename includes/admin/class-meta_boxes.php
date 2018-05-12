@@ -12,7 +12,6 @@ if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
 class EVOTX_post_meta_boxes{
 	public function __construct(){
-		$this->debug = true;
 		add_action( 'add_meta_boxes', array($this, 'evotx_meta_boxes') );
 		add_action('eventon_save_meta',  array($this, 'evotx_save_ticket_info'), 10, 2);
 		add_action('save_post',array($this, 'save_evotix_post'), 10, 2);
@@ -29,8 +28,9 @@ class EVOTX_post_meta_boxes{
 			// check if the order post is a ticket order before showing meta box
 			if($post->post_type=='shop_order'){
 				$order_type = get_post_meta($post->ID, '_order_type', true);
-				if(!empty($order_type) && $order_type=='evotix')
+				if(!empty($order_type) && $order_type=='evotix'){
 					add_meta_box('evotx_mb1','Event Tickets', array($this,'evotx_metabox_003'),'shop_order', 'side', 'default');
+				}
 			}
 
 			// when adding a new ticket order from backend
@@ -67,6 +67,7 @@ class EVOTX_post_meta_boxes{
 
 			}
 			// save value
+			// Manually adding ticket orders from backend
 			function evotx_new_ticket_order_save($post_id, $post){
 				if($post->post_type!='shop_order')	return;
 				if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) return;
@@ -76,9 +77,9 @@ class EVOTX_post_meta_boxes{
 					update_post_meta($post_id,'_order_type', $_POST['_order_type']);
 
 					if($_POST['_order_type'] == 'yes'){
+						$ET = new evotx_tix();
+						$ET->create_tickets_for_order($post_id);
 						global $evotx;
-
-						$evotx->functions->create_tickets($post_id);
 						$evotx->functions->alt_initial_event_order($post_id);
 					}
 				}
@@ -90,35 +91,38 @@ class EVOTX_post_meta_boxes{
 				global $post;
 
 				$order_id = $post->ID;
+				$order = new WC_Order( $order_id);
 				$orderPMV = get_post_custom($order_id);
 				
 				$tixEmailSent = (!empty($orderPMV['_tixEmailSent']) && $orderPMV['_tixEmailSent'][0]==true)? true:false;
 
 				//print_r($orderPMV);
 				
-				do_action('evotx_beforesend_tix_email', array(), $order_id);
+				//do_action('evotx_beforesend_tix_email', array(), $order_id);
 
+				$url = get_admin_url(). 'admin-ajax.php?action=evopdf_gen_pdf&type=ticket&oid='. $_REQUEST['post'];
+				echo "<a href='{$url}'>Test</a>";
 				?>
+				<div class='evotx_wc_order_cpt'>
 				<p style=''>
 				<?php echo __('Initial Ticket Email','evotx') .': <span style="background-color:#efefef; padding:1px 5px; border-radius:5px;">'. (($tixEmailSent)? __('Sent','evotx'): __('Not Sent','evotx'));?>
 				</span></p>
 
-				<?php if($post->post_status =='wc-completed'):?>
-				<div class='evoTX_resend_conf'>			
-					<div class='evoTX_rc_in'>
-						<p><i><?php _e('You can re-send the Event Ticket confirmation email to customer if they have not received it. Make sure to check spam folder.','evotx');?></i></p>
-						<a id='evoTX_resend_email' class='evoTX_resend_email button' data-orderid='<?php echo $post->ID;?>'><?php _e('Re-send Ticket(s) Email','evotx');?></a>
-						
+				<?php 	if($post->post_status =='wc-completed'):?>
+					<div class='evoTX_resend_conf'>			
+						<div class='evoTX_rc_in'>
+							<p><i><?php _e('You can re-send the Event Ticket confirmation email to customer if they have not received it. Make sure to check spam folder.','evotx');?></i></p>
+							<a id='evoTX_resend_email' class='evoTX_resend_email button' data-orderid='<?php echo $post->ID;?>'><?php _e('Re-send Ticket(s) Email','evotx');?></a>
 
-						<p style='padding-top:5px'>
-							<span><?php _e('Send Ticket(s) Email to custom Email','evotx');?>
-							<input style='width:100%' type='text' name='customemail' placeholder='<?php _e('Type Email Address','evotx');?>'/>
-							<a id='evoTX_resend_email' class='evoTX_resend_email button customemail' style='margin-top:5px;' data-orderid='<?php echo $post->ID;?>'><?php _e('Send Ticket(s) Email','evotx');?></a>
-						</p>
+							<p style='padding-top:5px'>
+								<span><?php _e('Send Ticket(s) Email to custom Email','evotx');?>
+								<input style='width:100%' type='text' name='customemail' placeholder='<?php _e('Type Email Address','evotx');?>'/>
+								<a id='evoTX_resend_email' class='evoTX_resend_email button customemail' style='margin-top:5px;' data-orderid='<?php echo $post->ID;?>'><?php _e('Send Ticket(s) Email','evotx');?></a>
+							</p>
 
-						<p class='message' style='display:none; text-align:center;' data-s='<?php _e('Ticket Email Re-send!','evotx');?>' data-f='<?php _e('Could not send email.','evotx');?>'></p>
+							<p class='message' style='display:none; text-align:center;' data-s='<?php _e('Ticket Email Re-send!','evotx');?>' data-f='<?php _e('Could not send email.','evotx');?>'></p>
+						</div>
 					</div>
-				</div>
 				<?php
 					else:
 						echo '<p style="background-color:#FFEDD7; padding:1px 5px; border-radius:5px; text-align:center;">'.__('Ticket(s) Order is Not Completed Yet!','evotx')."</p>";
@@ -126,33 +130,35 @@ class EVOTX_post_meta_boxes{
 				?>
 
 				<?php
-				// ticket IDs of the order
-					if(!empty($orderPMV['_tixids'])){
-						echo "<p style='padding-top:10px; font-weight:bold;'>".__('Event Ticket Numbers for this Order','evotx');
-						$ticketnumbers = unserialize($orderPMV['_tixids'][0]);
-						if(is_array($ticketnumbers)){
-							foreach($ticketnumbers as $ticket){
-								$tixSplit = explode('-', $ticket);
-								echo '<a style="margin-top:5px;" href="'.get_edit_post_link($tixSplit[0]).'" class="button">'.$ticket."</a> ";
-							}
-						}else{
-							echo $ticketnumbers;
-						}
-						echo "</p>";
-					}
-				
-				// Ticket Meta Data
-				/*
-				echo "<p style='padding-top:10px; font-weight:bold;'>".__('Event Meta Data','evotx');
-
-				$order = new WC_Order($post->ID);
-				foreach( $order->get_items() as $item ) {
-					echo $item['name']. ' - '. $item['Event-Time'];
-					//print_r($item);
+				// Tickets for this order
+				$TA = new EVOTX_Attendees();
+				$tickets = $TA->_get_tickets_for_order($order->get_id(), 'event');
+				if($tickets){
+					
+					echo "<p style='padding-top:10px; font-weight:bold;'>".__('Ticket Numbers for this Order','evotx');		        		        		
+	        		echo "<p>";
+	        		foreach($tickets as $e=>$dd){
+	        			echo '<span style="display:block; text-transform:uppercase;font-weight:bold; font-size:12px;    background-color: #e8e8e8;color: #7d7d7d; padding: 5px 10px; margin: 0-12px;"><span style="opacity:0.5;">Event</span> '. get_the_title($e) . '</span>';
+	        			foreach($dd as $tn=>$td){
+	        				echo '<span style="display:block;border-bottom: 1px solid #cacaca; font-size:12px;margin:0 -12px">';
+	        				echo $TA->__display_one_ticket_data($tn, $td, array(
+								'inlineStyles'=>false,
+								'orderStatus'=>$order->get_status(),
+								'linkTicketNumber'=>true,
+								'showStatus'=>true,
+								'showExtra'=>false,
+								'guestsCheckable'=>$TA->_user_can_check(),				
+							));
+	        				
+	        				echo "</span>";
+	        			}
+	        		}
+	        		echo "</p>";
+		        
 				}
-				*/
+				
 
-
+				?></div><?php
 			}
 
 		// in evo-tix post
@@ -172,27 +178,46 @@ class EVOTX_post_meta_boxes{
 				<?php
 			}
 
-	// META BOX for ticket item post type CPT = evo-tix
+	// EVO-TIX POST
 		function evotx_metabox_002(){
 			global $post, $evotx;
 
 			wp_nonce_field( plugin_basename( __FILE__ ), 'evo_noncename_tix' );
 
-			$ticketItem_meta = $evotix_meta = get_post_meta($post->ID);
-			$event_id = !empty($ticketItem_meta['_eventid'])? $ticketItem_meta['_eventid'][0]:'';			
-			$event_meta = get_post_meta($event_id);	
+			$evotx_tix = $ET = new evotx_tix();
+			$HELPER = new evotx_helper();
+			$ET->evo_tix_id = $post->ID;
 
-			$evotx_tix = new evotx_tix();
+			$ticketItem_meta = $evotix_meta = get_post_meta($post->ID);
+			$event_id = $ET->get_prop('_eventid');			
+			$event_meta = get_post_meta($event_id);
+			
+
+			// Order data
+			$order_id = $ET->get_prop('_orderid');	
+			$order = new WC_Order( $order_id );	
+			$order_status = $order->get_status();
+
+			$EA = new EVOTX_Attendees();
+			$TH = $EA->_get_tickets_for_order($order_id);
+
+			// new ticket number method in 1.7
+				if( $tn = $ET->get_prop('_ticket_number')){
+					if( isset($TH[$event_id][$tn]) ){
+						$_TH = array();
+						$_TH[$event_id][$tn] = $TH[$event_id][$tn];
+						$TH = $_TH;
+					} 
+				}
+
+			//print_r($order->get_items());
 
 			// Debug email templates
-				if($this->debug):
+				if(isset($_GET['debug']) && $_GET['debug']):
 					
 					$order_id = $ticketItem_meta['_orderid'][0];
 					$order = new WC_Order( $order_id);
 					$tickets = $order->get_items();
-
-					
-
 
 					$order_tickets = $evotx_tix->get_ticket_numbers_for_order($order_id);
 					
@@ -216,46 +241,30 @@ class EVOTX_post_meta_boxes{
 			// get event times			
 				$event_time = $evotx->functions->get_event_time($event_meta, (!empty($ticketItem_meta['repeat_interval'])? $ticketItem_meta['repeat_interval'][0]:0) );
 
-				// get corrected event ticket ids
-					if(empty($ticketItem_meta['ticket_ids'][0])){
-						$evotx->functions->correct_tix_ids($ticketItem_meta, $post->ID);					
-					}
 			?>	
 			<div class='eventon_mb' style='margin:-6px -12px -12px'>
 			<div style='background-color:#ECECEC; padding:15px;'>
 				<div style='background-color:#fff; border-radius:8px;'>
 				<table width='100%' class='evo_metatable' cellspacing="" style='vertical-align:top' valign='top'>
 					<tr><td><?php _e('Woocommerce Order ID','evotx');?> #: </td><td><?php 
-
-						// order status
-						$_orderid = get_post_meta($post->ID, '_orderid', true);		
-						$order_status = $evotx->functions->get_order_status($_orderid);
-
-						echo '<a class="button" href="'.get_edit_post_link($ticketItem_meta['_orderid'][0]).'">'.$ticketItem_meta['_orderid'][0].'</a> <span style="display:inline-block; padding:5px 0 0 10px;">'.$order_status.'</span>';
+						echo '<a class="button" href="'.get_edit_post_link($order_id).'">'.$order_id.'</a> <span class="evotx_wcorderstatus '.$order_status.'" style="line-height: 20px; padding: 5px 20px;">'.$order_status.'</span>';
 					?></td></tr>
-					
-					<tr><td><?php _e('Ticket Type','evotx');?>: </td><td><?php echo (!($ticketItem_meta['type'])? $ticketItem_meta['type'][0]:'--');?></td></tr>
-
 					<?php
-						$primary_ticket_holder = (!empty($ticketItem_meta['_customerid'][0]) && $ticketItem_meta['_customerid'][0] != '0')? '<a href="'.get_edit_user_link($ticketItem_meta['_customerid'][0]).'">'.$ticketItem_meta['name'][0].'</a>': $ticketItem_meta['name'][0];
-					?>
-					<tr><td><?php _e('Ticket Holder(s) for the order','evotx');?>: </td>
-						<td><?php 
-							echo $primary_ticket_holder . __(' (Purchased By)','evotx');
+					foreach( array(
+						'type'=>__('Ticket Type','evotx'),
+						'email'=>__('Email Address','evotx'),
+						'qty'=>__('Quantity','evotx'),
+						'cost'=>__('Cost for ticket(s)','evotx'),
 
+					) as $k=>$v){
+						$d = $ET->get_prop($k);	
+						$d = !$d? '--': $d;
 
-							$order_ticket_holders = $evotx_tix->get_order_ticket_holders($_orderid);
-							$add_ticket_holder = array();
-							if(!empty($order_ticket_holders)){
-								$add_ticket_holder = $evotx_tix->get_ticket_holders_forevent( $event_id,$order_ticket_holders);
-
-								echo '<p style="">'.implode(', ',$add_ticket_holder ) . '</p>';	
-							}
+						if( $k=='cost') $d = $HELPER->convert_to_currency($d);
 						?>
-						</td></tr>
-					<tr><td><?php _e('Email Address','evotx');?>: </td><td><?php echo $ticketItem_meta['email'][0];?></td></tr>
-					<tr><td><?php _e('Quantity','evotx');?>: </td><td><?php echo $ticketItem_meta['qty'][0];?></td></tr>
-					<tr><td><?php _e('Cost for ticket(s)','evotx');?>: </td><td><?php echo get_woocommerce_currency_symbol().$ticketItem_meta['cost'][0];?></td></tr>
+						<tr><td><?php echo $v;?>: </td><td><?php echo $d;?></td></tr><?php
+					}
+					?>
 					<tr><td><?php _e('Event','evotx');?>: </td>
 					<td><?php echo '<a class="button" href="'.get_edit_post_link($event_id).'">'.get_the_title($ticketItem_meta['_eventid'][0]).'</a>';?> 
 						<?php
@@ -273,45 +282,35 @@ class EVOTX_post_meta_boxes{
 						$__count = ': '.(!empty($st_count['checked'])? $st_count['checked']:'0').' out of '.$ticketItem_meta['qty'][0];
 					?>				
 					<tr><td><?php _e('Ticket Checked-in Status','evotx');?>: </td><td><?php echo $status.$__count; ?></td></tr>
-					<tr><td ><?php _e('Ticket(s)','evotx');?> #: </td><td>
-						<?php 
-						// get ticket number for this ticket post
-							$ticket_numbers = $evotx_tix->get_ticket_numbers_by_evotix($post->ID);
-						?>
-						<table id='evotx_ticketItem_tickets'>
+					<?php
+						// ticket purchased by
+						$purchaser_id = $ET->get_prop('_customerid');
+						$purchaser = get_userdata($purchaser_id);
+
+						if($purchaser):					
+					?>
+					<tr><td><?php _e('Ticket Purchased by','evotx');?>: </td>
+						<td><?php 	echo $purchaser->last_name.' '.$purchaser->first_name;	?></td></tr>
+					<?php
+						endif;
+						do_action('eventontx_tix_post_table',$post->ID, $ticketItem_meta, $event_id);
+					?>
+					<tr><td colspan='2'><?php _e('Ticket Number(s) and details','evotx');?>						
+						<div id='evotx_ticketItem_tickets'>
 							<?php 
-								if(is_array($ticket_numbers)):
-
-									$index = 0;
-									foreach($ticket_numbers as $ticket_number=>$status):
-
-										// get ticket holder names by number
-										$ticket_holder = $evotx_tix->get_ticket_holder_by_ticket_number($ticket_number,$_orderid);
-
-									?>
-									<tr><td><?php echo  apply_filters('evotx_tixPost_tixid', $ticket_number);?>
-										<?php if($ticket_holder):?>
-											<span class='evotx_attendee_name'> - <?php echo $ticket_holder;?> </span>
-										<?php endif;?>
-									<br/>
-
-									<?php	if($order_status == 'completed'):	?>
-										<span class='tix_status <?php echo $status;?>' data-tiid='<?php echo $post->ID;?>' data-tid='<?php echo $ticket_number;?>' data-status='<?php echo $status;?>'><?php echo $evotx_tix->get_checkin_status_text($status);?></span>
-									<?php endif;?>
-
-									</td></tr>
-							<?php 
-										$index++;
+								if($TH):
+									foreach($TH[$event_id] as $ticket_number=>$td):
+										echo $EA->__display_one_ticket_data($ticket_number, $td, array(
+											'orderStatus'=> $order_status,
+											'showStatus'=>true,
+											'guestsCheckable'=>$EA->_user_can_check(),	
+										));
 									endforeach;
-								else:
-									echo "<tr><td>{$ticket_numbers}</td></tr>";
 								endif;
 							?>
-						</table>
+						</div>
 					</td></tr>
-					<?php
-						do_action('eventontx_tix_post_table',$post->ID, $ticketItem_meta);
-					?>
+					
 				</table>
 				</div>
 			</div>
@@ -350,7 +349,7 @@ class EVOTX_post_meta_boxes{
 				
 			}
 
-	//  Event META BOX for ajde_events CPT */	
+	// EVENT META BOX for ajde_events CPT */	
 		function evotx_metabox_content(){
 			global $post, $evotx, $eventon, $evotx_admin;
 			$woometa='';
@@ -419,38 +418,37 @@ class EVOTX_post_meta_boxes{
 						<?php 
 							
 							$tickets_instock = $evotx->functions->get_tix_instock($woometa);
-							$ticket_stats = $evotx->functions->get_customer_ticket_list($event_id, $woo_product_id, 'all','order_status');
+
+							$TA = new EVOTX_Attendees();
+							$TH = $TA->_get_tickets_for_event($event_id, 'order_status_tally');
 							
-							if(!empty($ticket_stats)):
-								$denominator = (int)$tickets_instock + (int)$ticket_stats['total'];
-								foreach(array('notchecked','pending','refunded','checked') as $status){
-									if($status == 'notchecked'){
-										$top = $ticket_stats['completed']- $ticket_stats['checked'];
-										$data['notchecked'] = ($top!=0)?(($top/$denominator)*100):0;
-									}else{
-										$data[$status] = ($ticket_stats[$status]!=0)?(($ticket_stats[$status]/$denominator)*100):0;
-									}									
-								}
+							if($TH):
+								$denominator = (int)$tickets_instock + (int)$TH['total'];
+									
+								
 							?>
 							<div class="evotx_ticket_data">
 								<div class="evotx_stats_bar">
 									<p class='evotx_stat_subtitle' ><?php _e('Event Ticket Order Data','evotx');?></p>
 									<p class='stat_bar'>
-										<span class="checked" style='width:<?php echo $data['checked'];?>%'></span>
-										<span class="notchecked" style='width:<?php echo $data['notchecked'];?>%'></span>
-										<span class="pending" style='width:<?php echo $data['pending'];?>%'></span>
-										<span class="refunded" style='width:<?php echo $data['refunded'];?>%'></span>
+									<?php
+										foreach($TH as $st=>$td){
+											if($st == 'total') continue;
+											$status = $st;
+											$W = ($td!=0)? (($td/$denominator)*100) :0;	
+											?><span class="<?php echo $st;?>" style='width:<?php echo $W;?>%'></span><?php											
+										}
+									?>
 									</p>
 
 									<p class="evotx_stat_text">
-										<span><em class='checked'></em><?php _e('Checked','evotx');?>: <?php echo $ticket_stats['checked'];?></span>
-										<span><em class='notchecked'></em><?php _e('Not-checked','evotx');?>: <?php echo $ticket_stats['completed'] - $ticket_stats['checked'];?></span>
-										<?php if($ticket_stats['pending']>0):?>
-											<span><em class='pending'></em><?php _e('Pending','evotx');?>: <?php echo $ticket_stats['pending'];?></span>
-										<?php endif;?>
-										<?php if($product_type == 'simple'):?>
-											<span><em class='instock'></em><?php _e('In Stock','evotx');?>: <?php echo $tickets_instock;?></span>
-										<?php endif;?>
+										<?php
+										foreach($TH as $st=>$td){
+											if($st == 'total') continue;
+											?><span class="<?php echo $st;?>" style='width:<?php echo $W;?>%'></span>
+											<span><em class='<?php echo $st;?>'></em><?php echo $st;?>: <?php echo $td;?></span><?php											
+										}
+										?>
 									</p>
 								</div>
 							</div>
@@ -505,8 +503,7 @@ class EVOTX_post_meta_boxes{
 								?>
 								<tbody id='exotc_cap' class='innersection' style='display:<?php echo evo_meta_yesno($woometa,'_manage_stock','yes','','none' );?>'>
 								<tr ><td><?php _e('Total Tickets in Stock','evotx'); echo $eventon->throw_guide('This is how many tickets you have currently in stock.','',false)?></td><td><input type='text' id="_stock" name="_stock" value="<?php echo evo_meta($woometa, '_stock');?>"/></td></tr>
-										
-				
+														
 							<!-- Manage Capcity seperate for repeating events -->
 								<?php
 
@@ -554,6 +551,8 @@ class EVOTX_post_meta_boxes{
 								</td></tr>
 								<?php endif;?>
 
+								
+								</tbody>
 							<!-- show remaining -->
 								<?php
 									$remain_tix = evo_meta_yesno($fmeta,'_show_remain_tix','yes','yes','no' );
@@ -563,13 +562,10 @@ class EVOTX_post_meta_boxes{
 										<?php echo eventon_html_yesnobtn(array('id'=>'evotx_mcap',
 										'var'=>$remain_tix, 'attr'=>array('afterstatement'=>'evotx_showre_count'))); ?>
 										<input type='hidden' name='_show_remain_tix' value="<?php echo $remain_tix;?>"/>
-										<label for='_show_remain_tix'><?php _e('Show remaining tickets','evotx'); echo $eventon->throw_guide('This will show remaining tickets for this event on front-end','',false)?></label>
+										<label for='_show_remain_tix'><?php _e('Show remaining tickets (Only for Woocommerce simple tickets)','evotx'); echo $eventon->throw_guide('This will show remaining tickets for this event on front-end, ONLY if ticket stock is set.','',false)?></label>
 									</p>
 								</td></tr>
-								<tr id='evotx_showre_count' style='display:<?php echo evo_meta_yesno($fmeta,'_show_remain_tix','yes','','none' );?>'><td><?php _e('Show remaining count at','evotx'); echo $eventon->throw_guide('Show remaining count when remaining count go below this number.','',false);?></td><td><input type='text' id="remaining_count" name="remaining_count" placeholder='20' value="<?php echo evo_meta($fmeta, 'remaining_count');?>"/></td></tr>	
-								</tbody>
-							
-							
+								<tr id='evotx_showre_count' style='display:<?php echo evo_meta_yesno($fmeta,'_show_remain_tix','yes','','none' );?>'><td><?php _e('Show remaining count at','evotx'); echo $eventon->throw_guide('Show remaining count when remaining count go below this number.','',false);?></td><td><input type='text' id="remaining_count" name="remaining_count" placeholder='20' value="<?php echo evo_meta($fmeta, 'remaining_count');?>"/></td></tr>							
 							<!-- Show guest list on eventCard -->
 								<?php
 									$_tx_show_guest_list = ( !empty($fmeta['_tx_show_guest_list']) && $fmeta['_tx_show_guest_list'][0]=='yes')? 'yes':'no';
@@ -599,6 +595,7 @@ class EVOTX_post_meta_boxes{
 										<label for='_stock_status'><?php _e('Place ticket on out of stock', 'evotx'); echo $eventon->throw_guide('Set stock status of tickets. Setting this to yes would make tickets not available for sale anymore. This will also add sold out tag into event top, if not disabled in eventon settings.','',false)?></label>
 									</p>
 								</td></tr>	
+							
 							<!-- Catalog Visibility -->
 								<?php
 								/*
@@ -710,52 +707,30 @@ class EVOTX_post_meta_boxes{
 									<input style='width:100%; margin-top:5px'type='text' name='_tx_inq_email' placeholder='<?php echo $_tx_inq_email;?>' value='<?php echo $_tx_inq_email;?>'/>
 									<?php _e('Override Default Subject for Inquiries Email', 'evotx'); ?><br/>
 									<input style='width:100%; margin-top:5px'type='text' name='_tx_inq_subject' placeholder='<?php echo $_tx_inq_subject;?>' value='<?php echo evo_meta($fmeta, '_tx_inq_subject');?>'/>
-									<p style='padding-top:5px;opacity:0.6'><i><?php _e('NOTE: Front-end fields for Inquiries form can be customized from','evotx');?> <a style='color:#B3DDEC' href='<?php echo admin_url();?>admin.php?page=eventon&tab=evcal_2'>EventON Languages</a></i></p>
+									<p style='padding-top:5px;opacity:0.6'><i><?php _e('NOTE: Front-end fields for Inquiries form can be customized from','evotx');?> <a style='color:#B3DDEC' href='<?php echo admin_url();?>admin.php?page=eventon&tab=evcal_2'><?php _e('EventON Languages','evotx');?></a></i></p>
 								</td></tr>	
 							
-							<!-- Manually attach associate WC product-->
-							<?php
-								/*$_evotx_manual_product = evo_meta_yesno($fmeta,'_evotx_manual_product','yes','yes','no' );
+
+						<?php // promote variations and options addon 
+
+						if( $product_type != 'simple' && class_exists('evovo')){
 							?>
-								<tr ><td colspan='2'>
-									<p class='yesno_leg_line ' >
-										<?php echo eventon_html_yesnobtn(array('id'=>'_evotx_manual_product',
-										'var'=>$_evotx_manual_product, 'attr'=>array('afterstatement'=>'evotx_manual_product'))); ?>
-										<input type='hidden' name='_evotx_manual_product' value="<?php echo $_evotx_manual_product;?>"/>
-										<label for='_evotx_manual_product'><?php _e('Manually set associated WC ticket product'); echo $eventon->throw_guide('With this you can manually assign a woocommerce product as the ticket product that will be associated with this event as the ticket product, if a WC product was not auto generated.','',false)?></label>
-									</p>
-								</td></tr>
-								<tr class='innersection' id='evotx_manual_product' style='display:<?php echo evo_meta_yesno($fmeta,'_evotx_manual_product','yes','','none' );?>'>
-									<td colspan='2'>
-										<label><?php _e('Select the associated woocommerce ticket product', 'evotx'); ?></label>
-										<?php
-											global $wp_query;
-											$wc_product = new WP_Query(array(
-												'post_type'=>'product',
-												'post_per_page'=>-1,
-												'tax_query' => array(
-													array(
-														'taxonomy' => 'product_cat',
-														'field'    => 'slug',
-														'terms'    => 'ticket',
-													),
-												),
-											));
+							<tr><td colspan="2">
+							<p style='padding:15px 25px; margin:-5px -25px; background-color:#f9d29f; color:#474747; text-align:center; ' class="evomb_body_additional">
+								<span style='text-transform:uppercase; font-size:18px; display:block; font-weight:bold'><?php 
+								_e('Do you want to make ticket variations look better>','eventon');
+								?></span>
+								<span style='font-weight:normal'><?php echo sprintf(__('Check out our EventON Variations & Options addon and sell tickets with an ease like a boss!<br/> <a class="evo_btn button_evo" href="%s" target="_blank" style="margin-top:10px;">Check out eventON Variations & Options Addon</a>','eventon'), 'http://www.myeventon.com/addons/');?></span>
+							</p>
+							</td></tr>
+							<?php
+						}
 
-											if($wc_product->have_posts()):
-												while($wc_product->have_posts()): $wc_product->the_post();
-													echo get_the_title();
-													wp_reset_query();
-												endwhile;
-												wp_reset_postdata();
-											endif;
-										?>
-										<input style='width:100%; margin-top:5px'type='text' name='_tx_inq_email' placeholder='<?php echo $_tx_inq_email;?>' value='<?php echo $_tx_inq_email;?>'/>
-									
-								</td></tr>	
-							<?php */?>	
-
-							<?php do_action('evotx_event_metabox_end', $event_id, $fmeta,  $woo_product_id, $product_type);?>					
+						?>
+							<?php 
+							// pluggable hook
+							do_action('evotx_event_metabox_end', $event_id, $fmeta,  $woo_product_id, $product_type, $EVENT);
+							?>					
 
 						</table>
 						<?php if($woo_product_id):?>
@@ -771,31 +746,9 @@ class EVOTX_post_meta_boxes{
 					</div>						
 					<?php
 						// lightbox content for view attendees	
+						$viewattendee_content = "<p class='evo_lightbox_loading'></p>";	
 						$ri_count_active = $evotx->functions->is_ri_count_active($fmeta, $woometa);
 						$datetime = new evo_datetime();	$wp_date_format = get_option('date_format');
-
-						if($repeat_intervals && $ri_count_active && count($repeat_intervals)>0):
-							ob_start();?>
-							<div id='evotx_view_attendees' class='evotx_select_repeating_instance'>
-								<p style='text-align:center'><label><?php _e('Select Repeating Instance of Event','evotx');?></label> 
-									<select name="" id="evotx_event_repeatInstance">
-										<option value="all"><?php _e('All Repeating Instances','evotx');?></option>
-										<?php
-										$x=0;								
-										foreach($repeat_intervals as $interval){
-											$time = $datetime->get_correct_formatted_event_repeat_time($fmeta,$x, $wp_date_format);
-											echo "<option value='".$x."'>".$time['start']."</option>"; $x++;
-										}
-										?>
-									</select>
-								</p>
-								<p style='text-align:center'><a id='evotx_VA_submit' data-e_id='<?php echo $post->ID;?>'  data-wcid='<?php echo evo_meta($fmeta, 'tx_woocommerce_product_id');?>' class='evo_admin_btn btn_prime' ><?php _e('Submit','evotx');?></a> </p>
-							</div>
-							<div id='evotx_view_attendees_list'></div>
-							<?php $viewattendee_content = ob_get_clean();
-						else:	
-							$viewattendee_content = "<p class='evo_lightbox_loading'></p>";	
-						endif;
 					?>
 					
 					<?php 					
@@ -842,6 +795,12 @@ class EVOTX_post_meta_boxes{
 						global $ajde;
 						
 						echo $ajde->wp_admin->lightbox_content(array(
+							'class'=>'evotx_lightbox_def', 
+							'content'=> "<p class='evo_lightbox_loading'></p>",
+							'title'=>__('Ticket','evotx'), 
+							'max_height'=>500 
+						));
+						echo $ajde->wp_admin->lightbox_content(array(
 							'class'=>'evotx_lightbox', 
 							'content'=>$viewattendee_content, 
 							'title'=>__('View Attendee List','evotx'), 
@@ -874,9 +833,12 @@ class EVOTX_post_meta_boxes{
 					<!-- Attendee section -->
 						<?php if(!empty($woometa['total_sales']) && $woometa['total_sales']>0):?>
 						<div class='evoTX_metabox_attendee_other'>
-							<p><?php _e('Additional Options for Event Attendance','evotx');?></p>
+							<p><?php _e('Other ticket options','evotx');?></p>
 							<p class="actions">
-								<a id='evotx_attendees' data-eid='<?php echo $event_id;?>' data-riactive='<?php echo ($ri_count_active && $repeat_intervals)?'yes':'no';?>' data-wcid='<?php echo evo_meta($fmeta, 'tx_woocommerce_product_id');?>' data-popc='evotx_lightbox' class='button_evo attendees ajde_popup_trig' title='<?php _e('View Attendees','evotx');?>'><?php _e('View Attendees','evotx');?></a>
+								<a id='evotx_visual' data-eid='<?php echo $event_id;?>' data-popc='evotx_lightbox_def' data-action='evotx_sales_insight' class='button_evo ajde_popup_trig visualdata' title='<?php _e('Extended insight on ticket sales','evotx');?>'><?php _e('Sales Insight','evotx');?></a>
+
+								<a id='evotx_attendees' data-eid='<?php echo $event_id;?>' data-wcid='<?php echo evo_meta($fmeta, 'tx_woocommerce_product_id');?>' data-popc='evotx_lightbox' class='button_evo attendees ajde_popup_trig' title='<?php _e('View Attendees','evotx');?>'><?php _e('View Attendees','evotx');?></a>
+								
 								<a class='button_evo download' href="<?php echo $exportURL;?>"><?php _e('Download (CSV)','evotx');?></a>
 								<a id='evotx_EMAIL' data-e_id='<?php echo $event_id;?>' data-popc='evotx_email_attendee' class='button_evo email ajde_popup_trig' ><?php _e('Emailing','evotx');?></a> 
 								<a href='<?php echo get_admin_url('','/admin.php?page=eventon&tab=evcal_5');?>'class='button_evo troubleshoot ajde_popup_trig' title='<?php _e('Troubleshoot RSVP Addon','evotx');?>'><?php _e('Troubleshoot','evotx');?></a> 

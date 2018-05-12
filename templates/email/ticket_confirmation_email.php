@@ -1,7 +1,7 @@
 <?php
 /**
  * Ticket Confirmation email Template
- * @version 1.6
+ * @version 1.7
  *
  * To customize: copy this file to your theme folder as below path
  * path: your-theme-dir/eventon/templates/email/tickets/
@@ -59,7 +59,11 @@ if(empty($args['tickets'])) return;
 $processed_ticket_ids = array();
 $evotx_tix = new evotx_tix();
 
-$order_ticket_holders = $evotx_tix->get_order_ticket_holders($args['orderid']);
+// get all ticket hodlers for this order
+	$EA = new EVOTX_Attendees();
+	$TH = $EA->_get_tickets_for_order( $args['orderid']);
+	
+
 
 $tix_holder_index = 0;
 
@@ -84,6 +88,8 @@ foreach($args['tickets'] as $ticket_number):
 	// event time
 		$repeat_interval = !empty($ticket_pmv['repeat_interval'])? $ticket_pmv['repeat_interval'][0]:0;
 		$eventTime = $evotx->functions->get_event_time($e_pmv, $repeat_interval);
+
+	$_this_ticket = $TH[$event_id][$ticket_number];
 
 	// set check values
 		if(empty($_event_id) || $_event_id != $event_id){
@@ -126,42 +132,41 @@ foreach($args['tickets'] as $ticket_number):
 	if($show_add_cal):
 ?>
 	<tr><td class='add_to_cal' colspan='3' style='padding:20px 20px 15px'>		
-		<p style="<?php echo $styles['102'].$styles['pb10'];?>"><a style='<?php echo $__styles_button;?>' href='<?php echo admin_url();?>admin-ajax.php?action=eventon_ics_download&event_id=<?php echo $event_id;?>&sunix=<?php echo $e_pmv['evcal_srow'][0];?>&eunix=<?php echo $e_pmv['evcal_erow'][0];?>' target='_blank'><?php echo evo_lang_get( 'evcal_evcard_addics', 'Add to calendar','',$eo2);?></a></p>		
+		
+		<p style="<?php echo $styles['102'].$styles['pb10'];?>"><a style='<?php echo $__styles_button;?> border-radius:5px' href='<?php echo admin_url();?>admin-ajax.php?action=eventon_ics_download&event_id=<?php echo $event_id;?>&sunix=<?php echo $e_pmv['evcal_srow'][0];?>&eunix=<?php echo $e_pmv['evcal_erow'][0];?>' target='_blank'><?php echo evo_lang_get( 'evcal_evcard_addics', 'Add to calendar','',$eo2);?></a></p>		
 	</td></tr>
 <?php
-	endif;
-	
-	// Ticket holder name and email
-		if(!empty($order_ticket_holders)){
-			$add_ticket_holder = $evotx_tix->get_ticket_holders_forevent( $event_id,$order_ticket_holders);		
-		}		
+	endif;	
+?>
+<?php
 
-		$ticket_purchaser = $evotx_tix->get_ticket_purchaser_info($ticket_number);
-		
-		$primaryTicketHolderName = (!empty($add_ticket_holder) && !empty($add_ticket_holder[$tix_holder_index]))? 
-			$add_ticket_holder[$tix_holder_index]: 
-			$ticket_purchaser;
-	
+// Ticket Status
+	$TS = $_this_ticket['s'];
+	$TS = $TS? $TS: 'check-in';
 ?>
  <tr>
  	<td>
 	<table style="<?php echo $styles['000'];?> width:100%;" >
-
 	<tr>
-		<td colspan='2' style='border-bottom:1px solid #e0e0e0; padding:10px 20px'>
-			<table class='evotx_email_ticket_header'>
+		<td colspan='2' style='border-bottom:1px solid #e0e0e0; padding:10px 20px;<?php echo $TS=='refunded'? 'background-color:#ff6f6f;color:#fff':'';?>'>
+			<table class='evotx_email_ticket_header' style='background-color:transparent'>
 			<tr>
+			
 			<?php if($img_src):?>		
-			<td>			
+			<td style='background-color:transparent'>			
 				<p style='padding-right:20px'><img style='border-radius:50%;height:120px; width:auto; max-width:none' src="<?php echo $img_src[0];?>" alt=""></p>
-			</td>
-			<td>
+			</td>		
+			
+			<td style='background-color:transparent'>
+				<?php if($TS=='refunded'):?><p><?php echo $TS;?></p><?php endif;?>
 				<p style="<?php echo $styles['001'];?>"><?php echo evo_lang_get( 'evotxem_001', 'Your Ticket for','',$eo2);?></p>
 				<p style="<?php echo $styles['002'].$styles['pb10'];?>"><a style='text-decoration:none;box-shadow:none;color:#5e5e5e' href='<?php echo get_the_permalink($event_id);?>'><?php echo get_the_title($product_id);?></a></p>
 
-			</td>		
+			</td>
+
 			<?php else:?>
-			<td>
+			<td style='background-color:transparent'>
+				<?php if($TS=='refunded'):?><p><?php echo $TS;?></p><?php endif;?>
 				<p style="<?php echo $styles['001'];?>"><?php echo evo_lang_get( 'evotxem_001', 'Your Ticket for','',$eo2);?></p>
 				<p style="<?php echo $styles['002'].$styles['pb10'];?>"><a style='text-decoration:none;box-shadow:none;color:#5e5e5e' href='<?php echo get_the_permalink($event_id);?>'><?php echo get_the_title($product_id);?></a></p>
 
@@ -177,12 +182,11 @@ foreach($args['tickets'] as $ticket_number):
 			<div style=''>
 				<p style="<?php echo $styles['003'].$styles['pb5'];?>"><?php echo $eventTime;?></p>
 				<p style="<?php echo $styles['004'].$styles['pb5'];?>"><?php echo evo_lang_get( 'evotxem_002', 'Date','',$eo2);?></p>
-			</div>
-		
+			</div>		
 			<?php
 				foreach(apply_filters('evotx_confirmation_email_data_ar', array(
 					array(
-						'data'=>	$primaryTicketHolderName,
+						'data'=>	$_this_ticket['n'],
 						'label'=>	evo_lang_get( 'evoTX_004', 'Ticket Holder\'s Name','',$eo2),
 						'type'=>	'normal'
 					),array(
@@ -202,13 +206,19 @@ foreach($args['tickets'] as $ticket_number):
 					</div>
 					<?php endif;
 				}
-
 		?>
-
 		</td>
-
 		<td style='padding:10px; text-align:center;'>
-			<p style="<?php echo $styles['007'];?>"><?php echo apply_filters('evotx_email_tixid_list', $ticket_number);?></p>
+			<?php
+
+			$encrypt_TN = base64_encode($ticket_number);
+
+			if($_this_ticket['oS'] == 'completed'):				
+			?><p style="<?php echo $styles['007'];?>; text-transform:none;"><?php echo apply_filters('evotx_email_tixid_list', $encrypt_TN,$ticket_number, $_this_ticket);?></p>
+			<?php else:?>
+				<p style="<?php echo $styles['007'];?>;text-transform:none;"><?php echo $encrypt_TN;?></p>
+			<?php endif;?>
+			
 			<p style="<?php echo $styles['004'].$styles['pt5'];?>"><?php echo evo_lang_get( 'evotxem_003', 'Ticket Number','',$eo2);?></p>
 		</td>
 	</tr>
@@ -241,7 +251,8 @@ foreach($args['tickets'] as $ticket_number):
 				$ticket_pmv, 
 				$styles, 
 				$ticket_number, 
-				$tix_holder_index
+				$tix_holder_index,
+				$event_id
 			);
 		?>
 		</td>

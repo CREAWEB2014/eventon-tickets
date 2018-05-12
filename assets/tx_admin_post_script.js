@@ -1,6 +1,6 @@
 /** 
- * Javascript: Event Tickets Calendar
- * @version  1.3.8
+ * Admin view post functions
+ * @version  1.7
  */
 jQuery(document).ready(function($){
 
@@ -48,71 +48,43 @@ jQuery(document).ready(function($){
 
 	// GET attendee list
 		$('#evotx_attendees').on('click',function(){
-
-			RIACTIVE = $(this).data('riactive');
-			if(RIACTIVE =='no'){
-				var data_arg = {
-					action: 		'the_ajax_evotx_a1',
-					eid:			$(this).data('eid'),
-					wcid:			$(this).data('wcid'),
-					postnonce: evotx_admin_ajax_script.postnonce, 
-					ri:'all'
-				};
-				//console.log(data_arg);				
-				$.ajax({
-					beforeSend: function(){},
-					type: 'POST',
-					url:evotx_admin_ajax_script.ajaxurl,
-					data: data_arg,
-					dataType:'json',
-					success:function(data){
-						//console.log(data.status);
-						if(data.status=='0'){
-							$('.evotx_lightbox').find('.ajde_popup_text').html(data.content);
-						}else{
-							$('.evotx_lightbox').find('.ajde_popup_text').html('Could not load attendee list');
-						}
-
-					},complete:function(){}
-				});
-			}else{
-				$('body').find('#evotx_view_attendees_list').html('').hide();
-			}
-		});	
-		$('body').on('click','#evotx_VA_submit',function(){
 			var data_arg = {
 				action: 		'the_ajax_evotx_a1',
-				eid:			$(this).data('e_id'),
+				eid:			$(this).data('eid'),
 				wcid:			$(this).data('wcid'),
-				ri: $('#evotx_event_repeatInstance').val(),
 				postnonce: evotx_admin_ajax_script.postnonce, 
+				ri:'all'
 			};
-			//console.log(data_arg);			
+			//console.log(data_arg);				
 			$.ajax({
-				beforeSend: function(){ $('#evotx_view_attendees').addClass('loading'); },
+				beforeSend: function(){},
 				type: 'POST',
 				url:evotx_admin_ajax_script.ajaxurl,
 				data: data_arg,
 				dataType:'json',
 				success:function(data){
-					//alert(data);
+					//console.log(data.status);
 					if(data.status=='0'){
-						$('body').find('#evotx_view_attendees_list').html(data.content).slideDown();						
+						$('body').evotxDrawAttendees( data );
 					}else{
-						$('.evotx_lightbox ').find('.ajde_popup_text').html('Could not load attendee list');
+						$('.evotx_lightbox').find('.ajde_popup_text').html('Could not load attendee list');
 					}
-				},complete:function(){ $('#evotx_view_attendees').removeClass('loading');}
-			});	
-		});
+				},complete:function(){}
+			});
+		});	
 
-	// CHECK in attendees
-		$('.evotx_lightbox').on('click','span.evotx_status', function(){
+	// CHECK in attendees - global
+	// @updated 1.7
+		$('body').on('click','.evotx_status', function(){
 			var obj = $(this);
-			var status = obj.attr('data-status');
+			if(obj.hasClass('refunded')) return false;
+			if( obj.data('gc')){
+			
+			var status = obj.data('status');
 			var data_arg = {
 				action: 'the_ajax_evotx_a5',
-				tid: obj.attr('data-tid'),
-				tiid: obj.attr('data-tiid'),
+				tid: obj.data('tid'),
+				tiid: obj.data('tiid'),
 				status:  status
 			};
 			$.ajax({
@@ -124,35 +96,11 @@ jQuery(document).ready(function($){
 				data: data_arg,
 				dataType:'json',
 				success:function(data){
-					obj.attr({'data-status':data.new_status}).html(data.new_status_lang).removeAttr('class').addClass('evotx_status '+ data.new_status);
+					obj.data('status', data.new_status);
+					obj.html(data.new_status_lang).removeAttr('class').addClass('evotx_status '+ data.new_status);
 				}
 			});
-		});
-
-
-	// check in attendees via evo-tix post page
-		$('#evotx_ticketItem_tickets').on('click','.tix_status', function(){
-			var obj = $(this);
-			var data_arg = {
-				action: 'the_ajax_evotx_a5',
-				tid: obj.attr('data-tid'),
-				tiid: obj.attr('data-tiid'),
-				status: obj.attr('data-status'),
-			};
-			$.ajax({
-				beforeSend: function(){
-					obj.html( obj.html()+'...' );
-				},
-				type: 'POST',
-				url:evotx_admin_ajax_script.ajaxurl,
-				data: data_arg,
-				dataType:'json',
-				success:function(data){
-					//alert(data);
-					obj.attr({'data-status':data.new_status}).html(data.new_status_lang).removeAttr('class').addClass('tix_status '+ data.new_status);
-
-				}
-			});
+		}
 		});
 
 	// Send attendee list via email
@@ -239,7 +187,6 @@ jQuery(document).ready(function($){
 			});
 		});
 
-
 	// view rest repeat occurance 
 		$('body').on('click', '.evotx_ri_view_more a', function(){
 			$(this).parent().siblings('.evotx_ri_cap_inputs').find('p').fadeIn();
@@ -250,4 +197,34 @@ jQuery(document).ready(function($){
 		$('body').on('click','span.separatation',function(){
 			$(this).parent().find('span.hidden').toggleClass('bad');
 		});
+
+	// Sales insight
+	$('body').on('click','.visualdata',function(){
+		OBJ = $(this);
+		var ajaxdataa = { };
+			ajaxdataa['action']= OBJ.data('action');
+			ajaxdataa['event_id']= OBJ.data('eid');
+
+		LIGHTBOX = $('body').find('.'+OBJ.data('popc'));
+
+		$.ajax({
+			beforeSend: function(){
+				text = OBJ.attr('title'); // pass button title attr as title for lightbox
+				LIGHTBOX.find('.ajde_lightbox_title').html( text );
+			},
+			type: 'POST',
+			url:evotx_admin_ajax_script.ajaxurl,
+			data: ajaxdataa,
+			dataType:'json',
+			success:function(data){
+				if(data.status=='good'){						
+					LIGHTBOX.find('.ajde_popup_text').html( data.content);
+				}else{}
+			},complete:function(){
+				LIGHTBOX.find('.ajde_popup_text').removeClass( 'loading');
+			}
+		});	
+	});
+
+// SUPPORTIVE
 });

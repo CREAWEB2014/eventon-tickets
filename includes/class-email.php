@@ -111,6 +111,7 @@ class evotx_email{
 					$body = ($outter_shell)? 
 						$this->get_ticket_email_body($email_body_arguments): 
 						$this->get_ticket_email_body_only($email_body_arguments);
+					
 
 				// Send the email
 					$helper = new evo_helper();

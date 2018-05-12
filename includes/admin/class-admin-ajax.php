@@ -13,6 +13,7 @@ class evotx_admin_ajax{
 			'the_ajax_evotx_a8'=>'emailing_attendees_admin',
 			'evotx_assign_wc_products'=>'assign_wc_products',
 			'evotx_save_assign_wc_products'=>'save_assign_wc_products',
+			'evotx_sales_insight'=>'evotx_sales_insight',
 		);
 		foreach ( $ajax_events as $ajax_event => $class ) {
 			add_action( 'wp_ajax_'.  $ajax_event, array( $this, $class ) );
@@ -86,13 +87,13 @@ class evotx_admin_ajax{
 		echo json_encode(array('msg'=> $msg, 'status'=>'good')); exit;
 	}
 
-	// GET attendee list view for event
+// GET attendee list view for event
 		function evotx_get_attendees(){	
 			global $evotx;
 
 			$nonce = $_POST['postnonce'];
 			$status = 0;
-			$message = $content = '';
+			$message = $content = $json = '';
 
 			if(! wp_verify_nonce( $nonce, 'evotx_nonce' ) ){
 				$status = 1;	$message ='Invalid Nonce';
@@ -100,109 +101,13 @@ class evotx_admin_ajax{
 
 				ob_start();
 
-				$evotx_tix = new evotx_tix();
-
 				$ri = (!empty($_POST['ri']) || $_POST['ri']=='0')? $_POST['ri']:'all'; // repeat interval
 
-				$customer_ = $evotx->functions->get_customer_ticket_list($_POST['eid'], $_POST['wcid'], $ri);
-
-				// customers with completed orders
-				if($customer_){
-					echo "<div class='evotx'>";
-
-					do_action('evotx_admin_view_attendees', $_POST['eid'], $_POST['wcid']);
-
-					echo "<p class='header'>".__('Attendee Details','evotx')." <span class='txcount'>".__('Ticket Count','evotx')."</span></p>";	
-					
-					echo "<div class='eventedit_tix_attendee_list'>";
-
-				
-					// each event on the repeat
-					foreach($customer_ as $event_time=>$tickets){
-											
-						$indexO = 1;
-						$content = array();
-						$totalCompleteCount = 0;
-
-						// each ticket Order item
-						foreach($tickets as $ticketItem_){
-							
-							$output = '';
-
-							$order_status = !empty($ticketItem_['order_status'])? $ticketItem_['order_status']: false;
-							$key = ($order_status=='completed')?'good':'bad';
-							$key_ = ($order_status=='completed')?'':'hidden';
-							if($order_status=='completed')$totalCompleteCount += (int)$ticketItem_['qty'];
-
-							// HTML parsing
-							$output .= "<span class='evotx_ticketitem_customer ".($indexO%2==0? 'even':'odd')." {$key} {$key_} ". ( isset($ticketItem_['orderid']) ? 'orderid_'.$ticketItem_['orderid']: '') ."' data-orderid='". ( isset($ticketItem_['orderid']) ? $ticketItem_['orderid']: '') ."'>";
-							$output .= "<span class='evotx_ticketitem_header'>"
-								.'<b>'.$ticketItem_['name'].'</b>  ('.$ticketItem_['email'].') '.( !empty($ticketItem_['type'])? "- <b>{$ticketItem_['type']}</b>":''). 
-								( $order_status? " <b class='orderStutus status_{$order_status}'>{$order_status}</b>":'') ."</span>";
-							$output .= "<span class='evotx_ticketItem'><span class='txcount'>{$ticketItem_['qty']}</span>";
-
-							$tid = $ticketItem_['tids']; // ticket ID array with status
-							
-
-							$output .= "<span class='tixid'>";
-
-							// Ticket Holder information
-								$order_ticket_holders = get_post_meta($ticketItem_['orderid'], '_tixholders', true);
-								
-
-							// for each ticket ID
-							$index = 0;
-							foreach($tid as $ticket_number=>$_status){
-
-								$ticket_holder = $evotx_tix->get_ticket_holder_by_ticket_number($ticket_number);
-
-								$langStatus = $evotx->functions->get_checkin_status($_status);
-								
-								$output .= "<span class='evotx_ticket'>".$ticket_number;
-								
-								// if the order is completed show checking in interactive button
-								if($order_status == 'completed'){
-									$output .= "<span class='evotx_status {$_status}' data-tid='{$ticket_number}' data-status='{$_status}' data-tiid='{$ticketItem_['tiid']}'>".$langStatus."</span>";
-								}
-
-								// Ticket holder name associated to 
-								if($ticket_holder )
-									$output .= "<span class='evotx_ticket_holdername'>".$ticket_holder."</span>";
-								
-								$output .= "</span>";
-								$tidX = $ticket_number;
-								$index++;
-							}
-
-							$tix = explode('-', $tidX);
-							$orderID = $tix[1];
-
-							$output .= "<span class='clear'></span>
-								<em class='orderdate'>".__('Ordered Date','evotx').': '.$ticketItem_['postdata']."</em>";
-								$output .= " <em>".__('Order ID:','evotx')." <a class='evo_btn' href='".admin_url('post.php?post='.$orderID.'&action=edit')."'>".$orderID."</a></em>";
-							$output .= "</span>";
+				$EA = new EVOTX_Attendees();
+				$json = $EA->get_tickets_for_event($_POST['eid']);
 
 
-							$output .= "</span>";
-							$output .= "</span>";
-
-							
-							$content[$key][] = $output;
-							$indexO++;
-						}
-
-
-						echo "<p class='attendee'>";
-						echo "<span class='event_time'>".__('Event Start:','evotx').' '.$event_time."<em>".__('Total','evotx')." {$totalCompleteCount}</em></span>";
-						if(!empty($content['good']))	echo implode('', $content['good']);
-						echo "<span class='separatation'>".__('Other incompleted orders','evotx')."</span>";
-						if(!empty($content['bad'])) echo implode('', $content['bad']);
-
-						echo "</p>";					
-					}
-					echo "</div>";
-					echo "</div>";
-				}else{
+				if(!count($json)>0){
 					echo "<div class='evotx'>";
 					echo "<p class='header nada'>".__('Could not find attendees with completed orders.','evotx')."</p>";	
 					echo "</div>";
@@ -210,8 +115,11 @@ class evotx_admin_ajax{
 				
 				$content = ob_get_clean();
 			}
+
 					
 			$return_content = array(
+				'attendees'=> array('tickets'=>$json, 'od_gc'=>$EA->_user_can_check() ),
+				'temp'=> EVO()->temp->get('evotx_view_attendees'),
 				'message'=> $message,
 				'status'=>$status,
 				'content'=>$content,
@@ -221,204 +129,173 @@ class evotx_admin_ajax{
 			exit;
 		}
 
-	// Download csv list of attendees
-		function generate_csv(){
+// Download csv list of attendees
+	function generate_csv(){
 
-			$e_id = $_REQUEST['e_id'];
-			$event = get_post($e_id, ARRAY_A);
-
-			header("Content-type: text/csv");
-			header("Content-Disposition: attachment; filename=".$event['post_name']."_".date("d-m-y").".csv");
-			header("Pragma: no-cache");
-			header("Expires: 0");
+		$e_id = $_REQUEST['e_id'];
+		$EVENT = new EVO_Event($e_id);
+		$EVENT->get_event_post();
 
 
-			global $evotx;
-			$customers = $evotx->functions->get_customer_ticket_list($e_id, $_REQUEST['pid'], 'all');
+		header("Content-type: text/csv");
+		header("Content-Disposition: attachment; filename=".$EVENT->post_name."_".date("d-m-y").".csv");
+		header("Pragma: no-cache");
+		header("Expires: 0");
 
-			if($customers){
-				//$fp = fopen('file.csv', 'w');
 
-				$csv_header = apply_filters('evotx_csv_headers',array(
-					'Name',
-					//'Ticket Holder Name',
-					'Email Address',
-					'Company',
-					'Address',
-					'Phone',
-					'Ticket IDs',
-					'Quantity',
-					'Ticket Type',
-					'Event Time',
-					'Order Status'
-				));
-				$csv_head = implode(',', $csv_header);
-				echo $csv_head."\n";
+		$EA = new EVOTX_Attendees();
+		$TN = $EA->get_tickets_for_event($e_id);
+		
+		if($TN){
+			//$fp = fopen('file.csv', 'w');
+			$csv_header = apply_filters('evotx_csv_headers',array(
+				'Name',
+				//'Ticket Holder Name',
+				'Email Address',
+				'Company',
+				'Address',
+				'Phone',
+				'Ticket IDs',
+				'Quantity',
+				'Ticket Type',
+				'Event Time',
+				'Order Status',
+				'Ordered Date'
+			), $EVENT);
+			$csv_head = implode(',', $csv_header);
+			echo $csv_head."\n";
 
-				$evotx_tix = new evotx_tix();
-
-				$index = 1;
-				
-				
-				// each customer
-				foreach($customers as $eventtime=>$cus){
-
-					// each ticket item
-					foreach($cus as $ticketItem_){
-						
-						// Ticket Holder information
-							$order_ticket_holders = get_post_meta($ticketItem_['orderid'], '_tixholders', true);
-							$order_pmv = get_post_custom($ticketItem_['orderid']);
-							$ticket_holder = $evotx->functions->get_ticketholder_names( $e_id,$order_ticket_holders);
-
-						$ticket_numbers = $ticketItem_['tids']; // ticket numbers array with status
-						
-						// for each ticket ID
-						$index = 0;
-						foreach($ticket_numbers as $ticket_number=>$_status){					
-							$langStatus = $evotx->functions->get_checkin_status($_status);
-
-							$ticket_holder = $evotx_tix->get_ticket_holder_by_ticket_number($ticket_number);
-
-							$name = !$ticket_holder ? $ticketItem_['name']: $ticket_holder;
-
-							$csv_data = apply_filters('evotx_csv_row',array(
-								'name'=>$name,
-								'email'=>$ticketItem_['email'],
-								'company'=> '"'. $ticketItem_['company'] .'"',
-								'address'=> $ticketItem_['address'] ,
-								'phone'=>$ticketItem_['phone'],
-								'ticket_number'=>$ticket_number,
-								'qty'=>'1',
-								'ticket_type'=>$ticketItem_['type'],
-								'event_time'=>'"'.$eventtime.'"',
-								'order_status'=>$ticketItem_['order_status']
-							), $ticket_number, $e_id, $ticketItem_ , $index, $order_pmv);
-
-							foreach($csv_data as $field=>$val){
-								echo $val . ",";
-							}
-
-							echo "\n";
-							$index++;
-						}			
-					}
-					
-				}
-			}
-
-		}
-
-	// Email attendee list to someone
-		function emailing_attendees_admin(){
-			global $evotx, $eventon;
-
-			$eid = $_POST['eid'];
-			$wcid = $_POST['wcid'];
-			$type = $_POST['type'];
-			$RI = !empty($_POST['repeat_interval'])? $_POST['repeat_interval']:'all'; // repeat interval
-			$EMAILED = $_message_addition = false;
-			$emails = array();
-
-			// email attendees list to someone
-			if($type=='someone'){
-
-				// get the emails to send the email to
-				$emails = explode(',', str_replace(' ', '', htmlspecialchars_decode($_POST['emails'])));
-
-				$guests = $evotx->functions->get_customer_ticket_list($eid,$wcid, $RI,'customer_order_status');
-
-				if(is_array($guests) && isset($guests['completed']) && count($guests['completed'])>0){
-					ob_start();
-					
-					// get event date time
-						$datetime = new evo_datetime();
-						$epmv = get_post_custom($eid);
-						$eventdate = $datetime->get_correct_formatted_event_repeat_time($epmv, ($RI=='all'?'0':$RI));
-
-					echo "<p>Confirmed Guests for ".get_the_title($eid)." on ".$eventdate['start']."</p>";
-					echo "<table style='padding-top:15px; width:100%;text-align:left'><thead><tr>
-						<th>Primary Ticket Holder</th>
-						<th>Email Address</th>
-						<th>Quantity</th>
-						<th>Tickets</th>
-					</tr></thead>
-					<tbody>";
-					foreach($guests['completed'] as $guest){
-						echo "<tr><td>".$guest['name'] ."</td><td>".$guest['email']."</td><td>".$guest['qty']. "</td>
-						<td>";
-
-						foreach($guest['tickets'] as $ticketnumber=>$data){
-							echo "<p>";
-							echo $ticketnumber .": ". (!empty($data['name'])? $data['name'].' - ':'') . 
-								(!empty($data['status'])? $data['status']:'');
-							echo "</p>";
-						}
-
-						echo "</td></tr>";
-					}
-					echo "</tbody></table>";
-					$_message_addition = ob_get_clean();
-				}
-
-				//print_r($_message_addition);
-
-			}elseif($type=='completed'){
-				$guests = $evotx->functions->get_customer_ticket_list($eid,$wcid, $RI,'customer_order_status');
-				foreach(array('completed') as $order_status){
-					if(is_array($guests) && isset($guests[$order_status]) && count($guests[$order_status])>0){
-						foreach($guests[$order_status] as $guest){
-							$emails[] = $guest['email'];
-						}
-					}
-				}
-			}elseif($type=='pending'){
-				$guests = $evotx->functions->get_customer_ticket_list($eid,$wcid, $RI,'customer_order_status');
-				foreach(array('pending','on-hold') as $order_status){
-					if(is_array($guests) && isset($guests[$order_status]) && count($guests[$order_status])>0){
-						foreach($guests[$order_status] as $guest){
-							$emails[] = $guest['email'];
-						}
-					}
-				}
-			}
-
-			// emaling
-			if($emails){	
-				$email = new evotx_email();			
-				$messageBODY = "<div style='padding:15px'>".(!empty($_POST['message'])? strip_tags($_POST['message']).'<br/><br/>':'' ).($_message_addition?$_message_addition:'') . "</div>";
-				$messageBODY = $email->get_evo_email_body($messageBODY);
-				$from_email = $email->get_from_email_address();
-
-				$args = array(
-					'html'=>'yes',
-					'to'=> $emails,
-					'type'=> ($type=='someone'? '':'bcc'),
-					'subject'=>$_POST['subject'],
-					'from'=>$from_email,
-					'from_name'=> $email->get_from_email_name(),
-					'from_email'=> $from_email,
-					'message'=>$messageBODY,
-				);
-
-				//print_r($args);
-
-				$helper = new evo_helper();
-				$EMAILED = $helper->send_email($args);
-
-			}			
-
-			$return_content = array(
-				'status'=> ($EMAILED?'0':'did not go'),
-				'other'=>$args
-			);
+			$index = 1;				
 			
-			echo json_encode($return_content);		
-			exit;
+			// each customer
+			foreach($TN as $tn=>$td){					
+									
+				$csv_data = apply_filters('evotx_csv_row',array(
+					'name'=>	$td['n'],
+					'email'=>	$td['e'],
+					'company'=> '"'. isset($td['company'])? $td['company']:''.'"',
+					'address'=> $td['aD'],
+					'phone'=>	isset($td['phone'])? $td['phone']:'',
+					'ticket_number'=>	$tn,
+					'qty'=>				'1',
+					'ticket_type'=> 	$td['type'],
+					'event_time'=>		'"'.$td['oD']['eT'].'"',
+					'order_status'=>	$td['oS'],
+					'ordered_date'=> '"'. isset($td['oD']['ordered_date'])? $td['oD']['ordered_date']:''.'"',
+				), $tn, $td, $EVENT);
+
+				// process each data row
+				foreach($csv_data as $field=>$val){	echo $val . ",";	}
+
+				echo "\n";					
+			}
 		}
 
-	// Resend Ticket Email
-	// Used in both evo-tix and order post page
+	}
+
+// Email attendee list to someone
+	function emailing_attendees_admin(){
+		global $evotx, $eventon;
+
+		$eid = $_POST['eid'];
+		$wcid = $_POST['wcid'];
+		$type = $_POST['type'];
+		$RI = !empty($_POST['repeat_interval'])? $_POST['repeat_interval']:'all'; // repeat interval
+		$EMAILED = $_message_addition = false;
+		$emails = array();
+		$TA = new EVOTX_Attendees();
+
+		// email attendees list to someone
+		if($type=='someone'){
+
+			// get the emails to send the email to
+			$emails = explode(',', str_replace(' ', '', htmlspecialchars_decode($_POST['emails'])));
+
+			$TH = $TA->_get_tickets_for_event($eid,'order_status');
+			
+			if(is_array($TH) && isset($TH['completed']) && count($TH['completed'])>0){
+				ob_start();
+				
+				// get event date time
+					$datetime = new evo_datetime();
+					$epmv = get_post_custom($eid);
+					$eventdate = $datetime->get_correct_formatted_event_repeat_time($epmv, ($RI=='all'?'0':$RI));
+
+				echo "<p>Confirmed Guests for ".get_the_title($eid)." on ".$eventdate['start']."</p>";
+				echo "<table style='padding-top:15px; width:100%;text-align:left'><thead><tr>
+					<th>Ticket Holder</th>
+					<th>Email Address</th>
+					<th>Phone</th>
+					<th>Ticket Number</th>
+				</tr></thead>
+				<tbody>";
+				foreach($TH['completed'] as $tn=>$guest){
+					echo "<tr><td>".$guest['n'] ."</td><td>".$guest['e']."</td><td>".$guest['phone']. "</td>
+					<td>".$tn. "</td></tr>";
+				}
+				echo "</tbody></table>";
+				$_message_addition = ob_get_clean();
+			}
+
+			//print_r($_message_addition);
+
+		}elseif($type=='completed'){
+			$TH = $TA->_get_tickets_for_event($eid,'order_status');
+			foreach(array('completed') as $order_status){
+				if(is_array($TH) && isset($TH[$order_status]) && count($TH[$order_status])>0){
+					foreach($TH[$order_status] as $guest){
+						$emails[] = $guest['e'];
+					}
+				}
+			}
+		}elseif($type=='pending'){
+			$TH = $TA->_get_tickets_for_event($eid,'order_status');
+			foreach(array('pending','on-hold') as $order_status){
+				if(is_array($TH) && isset($TH[$order_status]) && count($TH[$order_status])>0){
+					foreach($TH[$order_status] as $guest){
+						$emails[] = $guest['e'];
+					}
+				}
+			}
+		}
+
+		// emaling
+		if($emails){	
+			$email = new evotx_email();			
+			$messageBODY = "<div style='padding:15px'>".
+				(!empty($_POST['message'])? html_entity_decode(stripslashes($_POST['message']) ).'<br/><br/>':'' ).
+				($_message_addition?$_message_addition:'') . "</div>";
+				
+			$messageBODY = $email->get_evo_email_body($messageBODY);
+			$from_email = $email->get_from_email_address();
+
+			$args = array(
+				'html'=>'yes',
+				'to'=> $emails,
+				'type'=> ($type=='someone'? '':'bcc'),
+				'subject'=>$_POST['subject'],
+				'from'=>$from_email,
+				'from_name'=> $email->get_from_email_name(),
+				'from_email'=> $from_email,
+				'message'=>$messageBODY,
+			);
+
+			//print_r($args);
+
+			$helper = new evo_helper();
+			$EMAILED = $helper->send_email($args);
+
+		}			
+
+		$return_content = array(
+			'status'=> ($EMAILED?'0':'did not go'),	'other'=>$args
+		);		
+		echo json_encode($return_content);		
+		exit;
+	}
+
+// Resend Ticket Email
+// Used in both evo-tix and order post page
 		function admin_resend_confirmation(){
 			$order_id = false;
 			$status = 'bad';
@@ -467,21 +344,34 @@ class evotx_admin_ajax{
 			exit;
 		}
 
-	// get information for a ticket number
-		function get_ticektinfo_by_ID(){
+// get information for a ticket number
+	function get_ticektinfo_by_ID(){
 
-			$tickernumber = $_POST['tickernumber'];
-			
-			$content = $this->get_ticket_info($tickernumber);
+		$tickernumber = $_POST['tickernumber'];
 
-			$return_content = array(
-				'content'=>$content,
-				'status'=> ($content? 'good':'bad'),
-			);
-			
-			echo json_encode($return_content);		
-			exit;
+		// decode base 64
+		if( $this->_is_base64encoded($tickernumber) ){
+			$tickernumber = base64_decode( $tickernumber );
+		}
+		
+		$content = $this->get_ticket_info($tickernumber);
 
+		$return_content = array(
+			'content'=>$content,
+			'status'=> ($content? 'good':'bad'),
+		);
+		
+		echo json_encode($return_content);		
+		exit;
+
+	}
+
+		function _is_base64encoded($data){
+			if (preg_match('%^[a-zA-Z0-9/+]*={0,2}$%', $data)) {
+		       return TRUE;
+		    } else {
+		       return FALSE;
+		    }
 		}
 
 		function get_ticket_info($ticket_number){
@@ -496,24 +386,25 @@ class evotx_admin_ajax{
 			ob_start();
 
 			$evotx_tix = new evotx_tix();
+			$EA = new EVOTX_Attendees();
 
 			$tixPOST = get_post($tixNum[0]);
 			$orderStatus = get_post_status($tixPMV['_orderid'][0]);
 				$orderStatus = str_replace('wc-', '', $orderStatus);
 
-			$ticketStatus = $evotx_tix->get_ticket_status_by_ticket_number($ticket_number);
-			$ticket_holder = $evotx_tix->get_ticket_holder_by_ticket_number($ticket_number);
+			$ticket_holder = $EA->get_attendee_by_ticket_number($ticket_number);
+			$ticket_status = isset($ticket_holder['s'])? $ticket_holder['s']: 'check-in';
 
 			echo "<p><em>".__('Ticket Purchased By','evotx').":</em> {$tixPMV['name'][0]}</p>";
 
 			// additional ticket holder associated names
 				if(!empty($ticket_holder))
-					echo "<p><em>".__('Ticket Holder','evotx').":</em> {$ticket_holder}</p>";
+					echo "<p><em>".__('Ticket Holder','evotx').":</em> {$ticket_holder['n']}</p>";
 
 			echo "<p><em>".__('Email Address','evotx').":</em> {$tixPMV['email'][0]}</p>
 				<p><em>".__('Event','evotx').":</em> ".get_the_title($tixPMV['_eventid'][0])."</p>
 				<p><em>".__('Purchase Date','evotx').":</em> ".$tixPOST->post_date."</p>
-				<p><em>".__('Ticket Status','evotx').":</em> <span class='tix_status {$ticketStatus}' data-tiid='{$tixNum[0]}' data-tid='{$ticket_number}' data-status='{$ticketStatus}'>{$ticketStatus}</span></p>
+				<p><em>".__('Ticket Status','evotx').":</em> <span class='tix_status {$ticket_status}' data-tiid='{$tixNum[0]}' data-tid='{$ticket_number}' data-status='{$ticket_status}'>{$ticket_status}</span></p>
 				<p><em>".__('Payment Status','evotx').":</em> {$orderStatus}</p>";
 
 				// other tickets in the same order
@@ -532,6 +423,278 @@ class evotx_admin_ajax{
 			return ob_get_clean();
 		}
 
+// Sales Insight
+	function evotx_sales_insight(){
+
+		ob_start();
+
+		$event_id = $_POST['event_id'];
+
+		date_default_timezone_set('UTC');
+
+		$EVENT = new evotx_event($event_id);
+		$curSYM = get_woocommerce_currency_symbol();
+
+		// event time
+			if( !$EVENT->is_repeating_event()){
+				?>
+				<div class='evotxsi_row timetoevent'>
+					<?php if( $EVENT->is_current_event('start')):
+	
+						$timenow = current_time( 'timestamp' );
+
+						$start = $EVENT->get_prop('evcal_srow');
+
+						$dif = $start - $timenow;
+
+					?>
+						<p><?php _e('Time left till event start','evotx');?> <span class='static_field'><?php echo $this->get_human_time($dif);?></span></p>
+					<?php else:?>
+						<p><?php _e('Event has already started!','evotx');?></p>
+					<?php endif;?>				
+				</div>
+				<?php
+			}
+
+		// sales by ticekt order
+			$remainging_tickets = is_bool( $EVENT->has_tickets() )? 0: $EVENT->has_tickets();
+			$orders = new WP_Query(array(
+				'post_type'=>'evo-tix',
+				'posts_per_page'=>-1,
+				'meta_query'=>array(
+					array(
+						'key'=>'_eventid',
+						'value'=>$event_id
+					)
+				)
+			));
+
+			$sales_data = array();
+			$total_tickets_sold = 0;
+
+			$processed_order_ids = array();
+
+			if($orders->have_posts()):
+				while($orders->have_posts()): $orders->the_post();
+
+					$order_id = get_post_meta($orders->post->ID, '_orderid', true);
+
+					if(in_array($order_id, $processed_order_ids)) continue;
+
+					$order = new WC_Order( $order_id );	
+
+					if(sizeof( $order->get_items() ) <= 0) continue;
+
+					// for each ticket item in the order
+					$_order_qty = $_order_cost = 0;
+					foreach($order->get_items() as $item_id=>$item){
+						$_order_event_id = ( isset($item['_event_id']) )? $item['_event_id']:'';
+						$_order_event_id = !empty($_order_event_id)? $_order_event_id: get_post_meta( $item['product_id'], '_eventid', true);				    		
+				    	if(empty($_order_event_id)) continue; // skip non ticket items
+
+				    	if($_order_event_id != $event_id) continue;
+
+
+				    	$_order_qty += (int)$item['qty'];
+				    	$_order_cost += floatval($item['subtotal']);
+
+					}
+
+					$total_tickets_sold += $_order_qty;
+					$processed_order_ids[] = $order_id;				
+
+					$order_time = get_the_date('U', $order_id);
+					$billing_country = get_post_meta($order_id, '_billing_country',true);
+
+					$sales_data[$orders->post->ID] = array(
+						'qty'=>$_order_qty,
+						'cost'=>$_order_cost,
+						'status'=>$order->get_status(),						
+						'country'=>$billing_country,
+						'time'=>  $order_time 
+					);
+
+				endwhile;
+				wp_reset_postdata();
+			endif;
+
+		//print_r($sales_data);
+
+		// sales by order status
+		if(sizeof($sales_data)>0){
+
+			?>
+			<div class='evotxsi_row sales_by_status'>
+				<h2><?php _e('Ticket sales by ticket order status','evotx');?></h2>				
+				<p>
+				<span>
+					<b><?php echo $total_tickets_sold + $remainging_tickets ;?></b>
+					<em><?php echo $remainging_tickets==0? __('No capacity limit','evotx'):'';?></em>
+					<?php _e('Total Event Capacity','evotx');?>
+				</span>
+				
+				<?php foreach(array(
+					'wc-completed'=> __('Tickets Sold','evotx'),
+					'wc-onhold'=> __('Pending','evotx'),
+					'wc-cancelled'=> __('Cancelled','evotx'),
+					'wc-refunded'=> __('Refunded','evotx'),
+
+				) as $type=>$name):?>
+				<span class='<?php echo $type;?>'>
+					<?php
+						$_qty = $_cost = 0;
+						foreach($sales_data as $oid=>$d){
+
+							if( $type == 'wc-onhold'){
+								if(!in_array('wc-'.$d['status'], array('wc-on-hold','wc-pending','wc-processing','wc-failed')) ) continue; 
+							}else{
+								if('wc-'.$d['status'] != $type) continue;
+							}
+							
+
+							$_qty += (int)$d['qty'];
+							$_cost += floatval($d['cost']);
+						}
+					?>
+					<b><?php echo $_qty;?></b><em><?php echo $curSYM.number_format($_cost,2,'.','');?></em>
+					<i><?php echo $name;?></i>
+				</span>
+				<?php endforeach;?>
+				</p>
+			</div>
+			<div class='evotxsi_row sales_by_time'>
+				<h2><?php _e('Ticket sales based on the time of ticket sale','evotx');?></h2>	
+				<h3><?php _e('Time in relation to when the event start','evotx');?></h3>			
+				<p style='padding-top:10px'>
+				<?php	
+					$event_start = $EVENT->get_event_time('start');				
+					foreach(array(
+						array(4838400,10000000,__('2+ Month ago','evotx')),
+						array(2419200,4838400,__('1-2 Month ago','evotx')),
+						array(1209600,2419200,__('2-4 Weeks ago','evotx')),
+						array(604800,1209600,__('1-2 Weeks ago','evotx')),
+						array(259200,604800,__('3-7 Days Ago','evotx')),
+						array(86400,259200,__('1-3 Days Ago','evotx')),
+						array(0,86400,__('Within 1 Day','evotx')),
+					) as $val){
+
+						$_qty = $_cost = 0;
+
+						$index = 0;
+						foreach( $sales_data as $oid=>$d){
+							$order_time = $event_start - $d['time'] ;
+
+
+							// if order start is equal or greater and order end if less than
+							if( $order_time >= $val[0] && $order_time < $val[1] ){
+								$_qty += $d['qty'];
+								$_cost += $d['cost'];
+							}
+							$index++;
+						}
+
+					$total = $total_tickets_sold + $remainging_tickets;
+					$width = ($total_tickets_sold==0)? 0: number_format( (($_qty/$total) *100), 2);
+
+				?>
+					<span><b><?php echo $val[2];?></b>
+					<em><b style='width:<?php echo $width;?>%'></b></em>
+					<i><b><?php echo $_qty;?></b> <?php echo $curSYM.number_format($_cost,2,'.','');?></i>
+					</span>
+				<?php
+					}
+				?>
+				</p>
+			</div>
+			<div class='evotxsi_row sales_by_country'>
+				<h2><?php _e('Sales by customer location','evotx');?></h2>	
+				<h3><?php _e('Top 3 countries where customers have placed orders from','evotx');?></h3>			
+				<p style='padding-top:10px'>
+				<?php	
+										
+					$_country_data = array();
+					
+					foreach( $sales_data as $oid=>$d){
+
+						if(!isset($d['country'])) continue;
+
+						$_country_data[ $d['country']]['qty'] = isset($_country_data[ $d['country']]['qty'])?
+							$_country_data[ $d['country']]['qty'] + $d['qty'] : $d['qty'];
+
+						$_country_data[ $d['country']]['cost'] = isset($_country_data[ $d['country']]['cost'])?
+							$_country_data[ $d['country']]['cost'] + $d['cost'] : $d['cost'];
+						
+					}
+
+					//$_country_data['CA']= array('qty'=>'3','cost'=>'70');
+					//$_country_data['SL']= array('qty'=>'12','cost'=>'120');
+
+					$country_qty = array();
+					foreach($_country_data as $key=>$row){
+						$country_qty[ $key] = $row['qty'];
+					}
+
+					array_multisort( $country_qty, SORT_DESC,$_country_data );
+					
+					$index = 0;
+					foreach($_country_data as $country=>$data){
+					?>
+					<span style='opacity:<?php echo 1- ($index*0.3);?>'>
+						<em><?php echo empty($country)? 'n/a': $country;?></em>
+						<b><?php echo $data['qty'];?></b>
+						<i><?php echo $curSYM. number_format($data['cost'], 2, '.','');?></i>
+					</span>
+					<?php
+					$index++;
+					}
+
+				?>
+				</p>
+			</div>
+			<?php
+		}
+
+		do_action('evotx_sales_insight_after', $EVENT, $orders);
+
+		$content = ob_get_clean();
+
+		echo json_encode(array('content'=> $content, 'status'=>'good')); exit;
+	}
+
+	// return time difference in d/h/m
+		function get_human_time($time){
+
+			$output = '';
+			$day = $time/(60*60*24); // in day
+			$dayFix = floor($day);
+			$dayPen = $day - $dayFix;
+			if($dayPen > 0)
+			{
+				$hour = $dayPen*(24); // in hour (1 day = 24 hour)
+				$hourFix = floor($hour);
+				$hourPen = $hour - $hourFix;
+				if($hourPen > 0)
+				{
+					$min = $hourPen*(60); // in hour (1 hour = 60 min)
+					$minFix = floor($min);
+					$minPen = $min - $minFix;
+					if($minPen > 0)
+					{
+						$sec = $minPen*(60); // in sec (1 min = 60 sec)
+						$secFix = floor($sec);
+					}
+				}
+			}
+			$str = "";
+			if($dayFix > 0)
+				$str.= $dayFix." day ";
+			if($hourFix > 0)
+				$str.= $hourFix." hour ";
+			if($minFix > 0)
+				$str.= $minFix." min ";
+			//if($secFix > 0)	$str.= $secFix." sec ";
+			return $str;
+		}
 
 }
 new evotx_admin_ajax();

@@ -20,6 +20,7 @@ class evo_tix_ajax{
 			'evoTX_ajax_08'=>'evoTX_ajax_08',
 			'the_ajax_evotx_a5'=>'evoTX_checkin_',
 			'evoTX_ajax_09'=>'wc_cart_updates',
+			'evotx_add_to_cart'=>'evotx_add_to_cart',
 		);
 		foreach ( $ajax_events as $ajax_event => $class ) {
 			add_action( 'wp_ajax_'.  $ajax_event, array( $this, $class ) );
@@ -27,11 +28,80 @@ class evo_tix_ajax{
 		}
 	}
 
+	// Add event ticket to cart custom AJAX
+	// @since 1.6.7
+		function evotx_add_to_cart(){			
+			if( !isset($_POST['data'])) return false;
+			$DATA = $_POST['data'];
+			$event_data = $DATA['event_data'];
+
+			$event_id = $event_data['eid'];
+			$wcid = $event_data['wcid'];
+			$DATA['qty'] = $qty = $_POST['qty'];
+
+			global $product;
+			$product = wc_get_product( $wcid );
+			$default_ticket_price = $product->get_price();
+
+			$EVENT = new EVO_Event( $event_id);
+			$cart_item_keys = false;
+			$status = 'good'; $output = '';
+
+			// hook for ticket addons
+			$plug = apply_filters('evotx_add_ticket_to_cart_before',false, $EVENT,$DATA);
+			if($plug !== false){
+				echo $plug;
+			}
+			
+			// gather cart item data before adding to cart
+				$cart_item_data = apply_filters('evotx_add_cart_item_meta',
+					array(
+						'evotx_event_id_wc'			=> $event_id,
+						'evotx_repeat_interval_wc'	=> (isset($event_data['ri'])?$event_data['ri']:'0'),
+						'evotx_lang'				=> (isset($event_data['l'])? $event_data['l']: 'L1')
+					), 
+				$EVENT, $default_ticket_price, $DATA);
+
+
+			// Add ticket to cart
+				$cart_item_keys = WC()->cart->add_to_cart(
+					$wcid,
+					$qty,0,array(),
+					$cart_item_data
+				);
+
+				if($cart_item_keys){
+
+					// get total cart quantity for this item
+					$DATA['cart_qty'] = WC()->cart->cart_contents[ $cart_item_keys ]['quantity'];
+
+					do_action('evotx_after_ticket_added_to_cart', $cart_item_keys, $EVENT, $DATA, $cart_item_data);
+				}
+		
+
+			// Successfully added to cart
+			if($cart_item_keys!== false){
+				$tx_help = new evotx_helper();
+				$output = $tx_help->add_to_cart_html();
+				$msg = evo_lang('Ticket added to cart successfully!');
+			}else{
+				$msg = evo_lang('Could not add ticket to cart, please try later!');
+			}
+
+			echo json_encode( apply_filters('evotx_ticket_added_cart_ajax_data', array(
+				'msg'=>$msg, 
+				'status'=> $status,
+				'html'=>$output
+			), $EVENT, $DATA)); exit;
+
+		}
+
 	// for evo-tix post page and from event edit page
 		function evoTX_checkin_(){
 			global $evotx;
 
 			$ticketNumber = $_POST['tid'];
+			$msg = '';
 
 			// split ticket number
 			$tixNum = explode('-', $ticketNumber);
@@ -52,10 +122,12 @@ class evo_tix_ajax{
 				$newTixStaus = $other_status[0];
 
 			}else{
+				$msg = 'Order not completed';
 				$newTixStaus = $_POST['status'];
 			}			
 
 			$return_content = array(
+				'msg'=>$msg,
 				'new_status'=>$newTixStaus,
 				'new_status_lang'=>$CheckinLang[$newTixStaus],
 			);

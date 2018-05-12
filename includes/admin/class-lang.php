@@ -10,8 +10,11 @@ class evotx_lang{
 	function evotx_language_additions($_existen){
 		$new_ar = array(
 			array('type'=>'togheader','name'=>'ADDON: Event Tickets'),
-				array('label'=>'Ticket Status: Check-in','name'=>'evoTX_003x',),
-				array('label'=>'Ticket Status: Checked','name'=>'evoTX_003y',),
+				array('label'=>'Ticket Statuses','type'=>'subheader'),
+					array('label'=>'Ticket Status: Check-in','name'=>'evoTX_003x',),
+					array('label'=>'Ticket Status: Checked','name'=>'evoTX_003y',),
+					array('label'=>'Refunded','var'=>1),
+				array('type'=>'togend'),
 
 				array('label'=>'Ticket section title', 'name'=>'evoTX_001', 'legend'=>''),	
 				array('label'=>'Add to Cart', 'name'=>'evoTX_002', 'legend'=>''),
@@ -41,6 +44,7 @@ class evotx_lang{
 				array('label'=>'Full Name', 'var'=>1),
 				array('label'=>'Additional Ticket Information', 'var'=>'1'),
 				array('label'=>'Once the order is processed your event tickets will show here!', 'var'=>1),
+				array('label'=>'This order has been refunded!', 'var'=>1),
 
 				array('label'=>'Ticket Inquiries Front-end Form','type'=>'subheader'),
 					array('label'=>'Inquire before buy','name'=>'evoTX_inq_01','legend'=>''),

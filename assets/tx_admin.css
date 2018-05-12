@@ -7,7 +7,6 @@
 	font-size:20px;
 	border-radius:24px;
 	padding:5px 20px 8px;
-	text-transform:uppercase;
 }
 .evotx_searchtix_box span{
     cursor: pointer;
@@ -54,3 +53,4 @@
     color: #fff;
 }
 .evotx_searchtix p span.tix_status:hover{opacity:0.6}
+

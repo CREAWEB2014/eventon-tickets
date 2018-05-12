@@ -57,15 +57,6 @@ function content(){
 								'name'=>'Auto re-stock tickets when orders were refunded or cancelled (For simple ticket products only)',
 								'legend'=>'This will auto increase the event tickets quantity when orders were canclled or refunded. Be careful if you have woocommerce set to auto reset as well, this will double restock capacity.'
 							),
-							array('id'=>'evotx_hideadditional_guest_names',
-								'type'=>'yesno',
-								'name'=>'Hide additional guest names'
-							),
-							array(
-								'id'=>'evotx_reqadditional_guest_names',
-								'type'=>'yesno',
-								'name'=>'Make additional guest names required in checkout'
-							),
 							
 							array(
 								'id'=>'evotx_wc_prod_redirect',
@@ -77,10 +68,23 @@ function content(){
 								'id'=>'evotx_wc_addcart_redirect',
 								'type'=>'dropdown',
 								'options'=>array(
-									'none'=>'Do not redirect','cart'=>'Cart Page','checkout'=>'Checkout Page'
+									'none'=>'Do not redirect',
+									'nonemore'=>'Do not redirect, allow adding more tickets to cart',
+									'cart'=>'Cart Page',
+									'checkout'=>'Checkout Page'
 								),
 								'name'=>'Upon add to cart redirect customer to',
-								'legend'=> 'This will redirect customer to selected page once they have added ticket to cart.'
+								'legend'=> 'Select your customer experience after adding a ticket to cart.'
+							),
+							array(
+								'id'=>'evotx_stop_selling_tickets',
+								'type'=>'dropdown',
+								'options'=>array(
+									'start'=>'When Event Start',
+									'end'=>'When Event Ends'
+								),
+								'name'=>'Default event ticket stop selling time base',
+								'legend'=> 'This will set the default event ticket stop selling time base.'
 							),
 
 							array('id'=>'subheader','type'=>'subheader',
@@ -99,12 +103,14 @@ function content(){
 									'legend'=>'When creating custom ticket product titles, please use {} so proper value will replace those fields.',
 									'default'=>'Ticket: {event_name} {event_start_date} - {event_end_date}'
 								),
+
 							array('id'=>'subheader','type'=>'subheader',
 								'name'=>__('Event Manager (<a href="http://www.myeventon.com/addons/action-user/" target="_blank">ActionUser Addon</a> required)','evotx')
 							),
 								array('id'=>'evotx_checkin_guests',
 									'type'=>'yesno',
-									'name'=>'Allow event creator to checkin guests via event manager'
+									'name'=>'Allow users with permission to check-in guests via event manager',
+									'legend'=>__('This will allow users who have permission within actionUser to edit events, also be able to check in guests for tickets','evotx')
 								),
 							
 							array('id'=>'evotx_tix_inquiries',
@@ -124,12 +130,40 @@ function content(){
 							
 					)),
 					array(
+						'id'=>'evotx2a',
+						'name'=>'Checkout Additional Data Settings',
+						'tab_name'=>'Checkout','icon'=>'cart-plus',
+						'fields'=>array(
+							array('id'=>'evotx_hideadditional_guest_names',
+								'type'=>'yesno',
+								'name'=>'Hide additional guest names',
+								'legend'=> __('Setting this will hide additional guest name fields at checkout','evotx')
+							),
+							array(
+								'id'=>'evotx_reqadditional_guest_names',
+								'type'=>'yesno',
+								'name'=>'Make additional guest names required in checkout'
+							),
+							array(
+								'id'=>'evotx_add_fields', 
+								'type'=>'checkboxes',
+								'name'=>__('Additional checkout guest fields','evotx'),
+								'options'=> apply_filters('evotx_additional_checkout_fields_settings', $this->_supportive_additional_checkout_fields())
+							),	
+					)),
+
+					array(
 						'id'=>'evotx2',
 						'name'=>'Ticket Email Settings',
 						'tab_name'=>'Emails','icon'=>'envelope',
 						'fields'=>array(
 
-							array('id'=>'evotx_tix_email','type'=>'yesno','name'=>'Stop auto sending ticket confirmation email to customers','legend'=>__('This will stop auto sending ticket email to customers upon their purchase of tickets.','evotx')),
+							array(
+								'id'=>'evotx_tix_email',
+								'type'=>'yesno',
+								'name'=>'Stop auto sending ticket confirmation email to customers',
+								'legend'=>__('This will stop auto sending ticket email to customers upon their purchase of tickets. However it will still send out WC order complete and other WC auto emails.','evotx')
+							),
 
 							array('type'=>'subheader','name'=>'Event Ticket Confirmation Email'),	
 							array('id'=>'evotx_notfiemailfromN','type'=>'text','name'=>'"From" Name','default'=>$site_name),
@@ -172,6 +206,16 @@ function content(){
 		</form>	
 	<?php
 }
+
+	// supportive
+		private function _supportive_additional_checkout_fields(){
+			$arr = array(
+				'phone'=>__('Phone Number','evotx'),
+				'email'=>__('Email Address','evotx'),			
+			);
+
+			return $arr;
+		}
 
 // custom code for searching the ticket information by ticket number
 	function searchcustomcode(){

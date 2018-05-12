@@ -20,7 +20,7 @@ class evotx_admin{
 		add_action('admin_init', array($this, 'evotx_admin_init'));
 		add_action('admin_head', array($this, 'evotx_admin_head'));
 		include_once('class-meta_boxes.php');
-		include_once('evo-tix.php');
+		include_once('class-admin-evo-tix.php');
 
 		// HOOKs		
 		$this->evotx_opt = get_option('evcal_options_evcal_tx');
@@ -41,9 +41,6 @@ class evotx_admin{
 	
 	// Initiate admin for tickets addon
 		function evotx_admin_init(){
-
-			
-
 
 			// set ticket language strings
 			$lang = new evotx_lang();
@@ -154,7 +151,7 @@ class evotx_admin{
 
 			// Update WC product title with event title if set
 				if(evo_settings_check_yn($this->evotx_opt, 'evotx_wc_prodname_update' )){
-					$title = $evotx->functions->get_ticekt_product_title();
+					$title = EVOTX()->functions->get_ticekt_product_title();
 					if($title) $post['post_title'] = $title;
 				}
 
@@ -244,6 +241,7 @@ class evotx_admin{
 		function evotx_event_post_styles(){
 			global $evotx;
 			wp_enqueue_style( 'evotx_admin_post',$evotx->assets_path.'admin_evotx_post.css');
+			wp_enqueue_script( 'evotx_draw_attendees',$evotx->assets_path.'tx_draw_attendees.js','',$evotx->version);
 			wp_enqueue_script( 'evotx_admin_post_script',$evotx->assets_path.'tx_admin_post_script.js','',$evotx->version);
 			wp_localize_script( 
 				'evotx_admin_post_script', 
