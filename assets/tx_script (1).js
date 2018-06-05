@@ -176,7 +176,7 @@ jQuery(document).ready(function($){
             beforeSend: function(){ 
                 EVOROW.addClass( 'evoloading');
             },                  
-            url:    evotx_object.ajaxurl,
+            url:    evovo_ajax_obj.ajaxurl,
             data:   ajaxdata,  dataType:'json', type:  'POST',
             success:function(data){
 
@@ -242,7 +242,7 @@ jQuery(document).ready(function($){
 
         // redirecting
         if(MSG_int.redirect != 'nonemore'){
-            $(EVOROW).find('.evotx_hidable_section').hide(); // hide only the hidable section
+            $(EVOROW).find('.evotx_hidable_box').hide(); // hide only the hidable section
         }
 
         MSG.html(HTML).show();

@@ -34,10 +34,6 @@ class EVOTX_Attendees{
 			$meta_query = array(
 				array('key' => '_eventid','value' => $event_id,'compare' => '=')
 			);
-
-			global $post;
-			$_post = $post;
-
 			$event_tickets = new WP_Query(array(
 				'posts_per_page'=>-1,
 				'post_type'=>'evo-tix',
@@ -56,8 +52,6 @@ class EVOTX_Attendees{
 				endwhile;
 				wp_reset_postdata();
 			endif;
-
-			$GLOBALS['post'] = $_post;
 
 			return $ticket_numbers;
 		}
@@ -200,7 +194,7 @@ class EVOTX_Attendees{
 				),$event_id);
 
 				// other purchaser data
-				foreach(array('company','phone','oS','aD') as $F){
+				foreach(array('company','phone','oS') as $F){
 					if(!isset($purchaser[$F])) continue;
 					$ticket_numbers[$ticket_id][$F] = $purchaser[$F];
 				}

@@ -1,7 +1,7 @@
 <?php
 /**
  * Single Ticket add to cart section 
- * @updated 1.7.1
+ * @updated 1.6.9
  */
 ?>
 <div class='tx_single'>
@@ -24,11 +24,7 @@
 			<?php
 				// Base Price HTML
 				$base_price = apply_filters('evotx_single_prod_price', $product->get_price(), $object);
-				$striked_price = apply_filters('evotx_single_prod_striked_price', '', $product->get_price(), $object);
-
-				$label_adds = apply_filters('evotx_single_prod_label_add', '', $product->get_price(), $object);
-
-				$tix_helper->base_price_html($base_price, '', $striked_price, $label_adds );
+				$tix_helper->base_price_html($base_price);
 			?>
 		
 			<?php if ( ! $product->is_sold_individually() ): ?>

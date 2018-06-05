@@ -575,7 +575,6 @@ class EVOTX_WC{
 		        				$field = str_replace('pa_', '', $field);
 
 		        				$value = str_replace('-', ' ', $value);
-		        				$field = urldecode($field);
 		        				$variation_text .= "<span>".$field. ': '.$value."</span> ";
 		        			}
 		        			$variation_text = "<br/>".$variation_text;

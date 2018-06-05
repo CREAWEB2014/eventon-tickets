@@ -70,7 +70,6 @@ function content(){
 								'options'=>array(
 									'none'=>'Do not redirect',
 									'nonemore'=>'Do not redirect, allow adding more tickets to cart',
-									//'noneopen'=>'Do not redirect, leave success message open',
 									'cart'=>'Cart Page',
 									'checkout'=>'Checkout Page'
 								),
@@ -177,7 +176,7 @@ function content(){
 							array('id'=>'evotx_conlink','type'=>'text','name'=>'Contact Us for questions Link URL in ticket email','default'=>site_url(),'legend'=>'This is the link used in ticket email footer for contact us for questions text. If left blank will use your website link.'),
 
 							array('id'=>'evcal_fcx','type'=>'subheader','name'=>'HTML Template'),
-							array('id'=>'evcal_fcx','type'=>'note','name'=>'To override and edit the email template copy "eventon-tickets/templates/email/ticket_confirmation_email.php" to  "yourtheme/eventon/templates/email/ticekts/ticket_confirmation_email.php.'),
+							array('id'=>'evcal_fcx','type'=>'note','name'=>'To override and edit the email template copy "eventon-tickets/templates/ticket_confirmation_email.php" to  "yourtheme/eventon/templates/email/ticket_confirmation_email.php.'),
 					)),
 
 					array(

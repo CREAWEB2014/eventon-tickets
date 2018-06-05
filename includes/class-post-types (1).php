@@ -29,7 +29,7 @@ class evotx_post_types{
 						'show_ui' 				=> true,
 						'capability_type' 		=> 'eventon',
 						'capabilities'			=>array(
-							'create_posts'=> 'do_not_allow'
+							'create_posts'=>false
 						),
 						'map_meta_cap'			=> true,
 						'exclude_from_search'	=> true,

@@ -158,7 +158,7 @@ class evotx_actionuser{
 						'id'=>'_show_remain_tix',
 						'input'=>true,
 						'label'=>evo_lang('Show remaining tickets'),
-						'var'=> (evo_check_yn($EPMV, '_show_remain_tix')?'yes':'no'),
+						'var'=> (evo_check_yn($woometa, '_show_remain_tix')?'yes':'no'),
 						'lang'=>$lang,
 						'guide'=> evo_lang('This will show remaining tickets for this event on front-end')
 					)
@@ -166,7 +166,7 @@ class evotx_actionuser{
 				$au_tx_fields_array['remaining_count']= array(
 					'type'=>	'text',
 					'name'=>	evo_lang('Show remaining count at',$lang, $opt2),
-					'value'=>	evo_var_val($EPMV, 'remaining_count'),
+					'value'=>	evo_var_val($woometa, 'remaining_count'),
 					'tooltip'=>	evo_lang('Show remaining count when remaining count go below this number.')
 				);
 				$au_tx_fields_array['_tx_show_guest_list']=array(
@@ -175,7 +175,7 @@ class evotx_actionuser{
 						'id'=>'_tx_show_guest_list',
 						'input'=>true,
 						'label'=>evo_lang('Show guest list for event on eventCard'),
-						'var'=> (evo_check_yn($EPMV, '_tx_show_guest_list')?'yes':'no'),
+						'var'=> (evo_check_yn($woometa, '_tx_show_guest_list')?'yes':'no'),
 						'lang'=>$lang,
 					)
 				);
@@ -203,18 +203,6 @@ class evotx_actionuser{
 
 					update_post_meta($event_id, 'evotx_tix', $_POST['evotx_tix']);
 					
-					// Update Event
-					foreach(array(
-						'_show_remain_tix',
-						'_tx_show_guest_list',
-						'remaining_count'
-					) as $field){
-						if(empty($_POST[$field])) continue;
-
-						update_post_meta($event_id, $field, $_POST[$field]);
-					}
-
-					// Update associated WC object
 					if( !empty($_POST['tx_woocommerce_product_id'])){
 						$post_exists = $this->post_exist($_POST['tx_woocommerce_product_id']);
 

@@ -1,5 +1,18 @@
 Tickets (TX) addon for EventON Plugin
 ====================================
+v 1.7.1 (2018-5-29)
+ADDED: Support for striked through price
+FIXED: ActionUser form several field values not saving
+FIXED: url decoding for wc variable product names in cart and checkout
+FIXED: several text strings not translating
+FIXED: unable to add to cart on ticket addons
+FIXED: Not able to download view attendees as CSV
+FIXED: Address not passing on to view attendees CSV file
+FIXED: do not redirect not hiding the hidden section and leaving success message
+FIXED: Minor styles
+FIXED: Incorrect notice on email override folder.
+FIXED: Disable adding event tikcets from backend
+
 v 1.7 (2018-5-9)
 ADDED: option to set event stop selling tickets time base
 ADDED: New Sales insight visual data for each event

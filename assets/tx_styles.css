@@ -12,6 +12,10 @@
 		text-align: center;
 		color:#fff;
 	}
+
+	.evcal_eventcard .evo_metarow_tix .tximg .tx_wc_notic{
+		margin: 15px -45px 0px -55px; 
+	}
 	
 	.evcal_eventcard .evo_metarow_tix .tx_wc_notic.error, 
 	.evo_metarow_tix .evotx_success_msg.bad{background-color:#fb9287; margin-top: 20px; }

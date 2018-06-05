@@ -132,7 +132,7 @@ class evotx_admin_ajax{
 // Download csv list of attendees
 	function generate_csv(){
 
-		$e_id = $_REQUEST['e_id'];
+		$e_id = (int)$_REQUEST['e_id'];
 		$EVENT = new EVO_Event($e_id);
 		$EVENT->get_event_post();
 
@@ -147,6 +147,7 @@ class evotx_admin_ajax{
 		$TN = $EA->get_tickets_for_event($e_id);
 		
 		if($TN){
+
 			//$fp = fopen('file.csv', 'w');
 			$csv_header = apply_filters('evotx_csv_headers',array(
 				'Name',
@@ -179,7 +180,7 @@ class evotx_admin_ajax{
 					'ticket_number'=>	$tn,
 					'qty'=>				'1',
 					'ticket_type'=> 	$td['type'],
-					'event_time'=>		'"'.$td['oD']['eT'].'"',
+					'event_time'=>		'"'.$td['oD']['event_time'].'"',
 					'order_status'=>	$td['oS'],
 					'ordered_date'=> '"'. isset($td['oD']['ordered_date'])? $td['oD']['ordered_date']:''.'"',
 				), $tn, $td, $EVENT);

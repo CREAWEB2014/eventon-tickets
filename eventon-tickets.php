@@ -4,10 +4,10 @@
  * Plugin URI: http://www.myeventon.com/
  * Description: Sell Event Tickets using Woocommerce
  * Author: Ashan Jay
- * Version: 1.7
+ * Version: 1.7.1
  * Author URI: http://www.ashanjay.com/
  * Requires at least: 4.0
- * Tested up to: 4.9.5
+ * Tested up to: 4.9.6
  *
  * Text Domain: evotx
  * Domain Path: /lang/
@@ -21,10 +21,10 @@ if ( ! defined( 'ABSPATH' ) ) exit;
 //Event tickets main class
 if ( ! class_exists( 'evotx' ) ):
 class evotx{	
-	public $version='1.7';
-	public $eventon_version = '2.6.9';
+	public $version='1.7.1';
+	public $eventon_version = '2.6.10';
 	public $wc_version = '3.1';
-	public $wc_max_version = '3.2';
+	public $wc_max_version = '3.4';
 	public $name = 'Tickets';
 			
 	public $addon_data = array();

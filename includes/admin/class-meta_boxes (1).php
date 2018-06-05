@@ -235,11 +235,7 @@ class EVOTX_post_meta_boxes{
 					$tt = $email->get_ticket_email_body($email_body_arguments);
 					print_r($tt);
 
-					//print_r(get_post_custom($post->ID));
-
-					$t = EVOPDF()->gen_pdf_file('ticket',$order_id);
-					print_r($t);
-
+					//EVOPDF()->gen_pdf_file('ticket',$order_id);
 				endif;
 
 			// get event times			
@@ -428,7 +424,8 @@ class EVOTX_post_meta_boxes{
 							
 							if($TH):
 								$denominator = (int)$tickets_instock + (int)$TH['total'];
-																	
+									
+								
 							?>
 							<div class="evotx_ticket_data">
 								<div class="evotx_stats_bar">
@@ -456,7 +453,7 @@ class EVOTX_post_meta_boxes{
 								</div>
 							</div>
 						<?php endif; ?>
-						
+
 						<table class='eventon_settings_table' width='100%' border='0' cellspacing='0'>
 							<?php if(!empty($product_type)):?>
 								<tr><td><?php _e('Ticket Pricing Type','evotx');?></td><td><?php echo  $product_type;?></td></tr>
@@ -734,7 +731,6 @@ class EVOTX_post_meta_boxes{
 							// pluggable hook
 							do_action('evotx_event_metabox_end', $event_id, $fmeta,  $woo_product_id, $product_type, $EVENT);
 							?>					
-	
 
 						</table>
 						<?php if($woo_product_id):?>

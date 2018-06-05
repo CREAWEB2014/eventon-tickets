@@ -56,17 +56,11 @@ class evotx_helper{
 		echo "</span></p>";
 	}
 
-	// HTML Price 
-	// @updated: 1.7.1
-	function base_price_html($price, $unqiue_class='', $striked_price = '', $label_additions=''){
-
-		$strike_  = !empty($striked_price)? "<span class='strikethrough' style='text-decoration: line-through'>". $this->convert_to_currency($striked_price).'</span> ':'';
-
-		$label_addition  = !empty($label_additions)? " <span class='label_add' style='font-style:italic; text-transform:none;opacity:0.6'>". $label_additions.'</span> ':'';
+	function base_price_html($price, $unqiue_class=''){
 		?>
 		<p itemprop="price" class='price tx_price_line <?php echo $unqiue_class;?>'>
-			<span class='label'><?php echo evo_lang('Price');?><?php echo $label_addition;?></span> 
-			<span class='value' data-sp='<?php echo $price;?>'><?php echo $strike_;?><?php echo $this->convert_to_currency( $price);?></span>
+			<span class='label'><?php echo evo_lang('Price');?></span> 
+			<span class='value' data-sp='<?php echo $price;?>'><?php echo $this->convert_to_currency( $price);?></span>
 			<input type="hidden" data-prices=''>
 		</p>
 		<?php
@@ -140,7 +134,7 @@ class evotx_helper{
 			$ticket_redirect = 'cart';
 
 		// after adding to cart message behavior values
-		$data['msg_interaction']['hide_after'] = ($ticket_redirect =='none')? false: true;
+		$data['msg_interaction']['hide_after'] = true;
 		$data['msg_interaction']['redirect'] = $ticket_redirect;
 
 		// merging with defaults

@@ -17,9 +17,9 @@ class evotx_lang{
 				array('type'=>'togend'),
 
 				array('label'=>'Ticket section title', 'name'=>'evoTX_001', 'legend'=>''),	
-				array('label'=>'Add to Cart', 'name'=>'evoTX_002', 'var'=>1),
+				array('label'=>'Add to Cart', 'name'=>'evoTX_002', 'legend'=>''),
 				array('label'=>'Order Now', 'name'=>'evoTX_002ee', 'legend'=>''),
-				array('label'=>'Price', 'name'=>'evoTX_002ff', 'var'=>1),
+				array('label'=>'Price', 'name'=>'evoTX_002ff', 'legend'=>''),
 				array('label'=>'This option is sold out!', 'var'=>1),
 				array('label'=>'How many tickets?', 'var'=>1),
 				array('label'=>'Clear selection', 'var'=>1),

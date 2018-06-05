@@ -229,7 +229,7 @@ class evotx_front{
 				if(!isset($GLOBALS['EVOLANG'])) $GLOBALS['EVOLANG'] = evo_get_current_lang(); 
 
 				global $evotx, $woocommerce, $EVOLANG;
-
+				
 			$eventPMV = $object->epmv;
 
 			// if only loggedin users can see
@@ -297,10 +297,7 @@ class evotx_front{
 
 			?>
 
-
-
 				<div class='<?php echo implode(' ', $class_names);?>' <?php echo $str;?>>
-
 					<span class='evcal_evdata_icons'><i class='fa <?php echo get_eventON_icon('evcal__evotx_001', 'fa-tags',$helpers['evOPT'] );?>'></i></span>
 					<div class='evcal_evdata_cell'>							
 						<h3 class='evo_h3'><?php $this->langEX('Ticket Section Title', 'evoTX_001');?></h3>
